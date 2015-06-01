@@ -18,18 +18,18 @@ bool       RUN_ON_PRESS              = false;
 // @ denotes multi-byte code
 // # denotes unprintable code                       0    1    2    3    4    5    6    7    8    9    10   11   12   13   14   15  
 const char lookupTable[256]          = { /*0*/     '&', '*', '*', '*', '*', '*', '@', '*', '*', '*', '*', '*', '*', '\352', '!', '*', 
-                                         /*16*/    '*', '*', '*', '*', '*', '*', '*', '*', '#', '*', '*', '*', '#', '*', '*', '#',
-                                         /*32*/    '*', 'o', '*', 'e', '*', '*', '*', 128, '*', '[', '*', 'g', '*', '\346', '#', '*', 
+                                         /*16*/    '*', '*', '*', '*', '*', '*', '*', '*', 193, '*', '*', '*', 204, '*', '*', 196,
+                                         /*32*/    '*', 'o', '*', 'e', '*', '*', '*', 128, '*', '[', '*', 'g', '*', '\346', 197, '*', 
                                          /*48*/    ';', '*', 't', '*', '\347', '*', 'a', '*', '*', '*', 'u', '*', '\335', '*', '*', '*', 
-                                         /*64*/    '*', 'k', '*', 'x', '*', '*', '*', '#', '*', '\'', '*', 'b', '*', '#', '*', 201, 
-                                         /*80*/    '*', '/', '*', 'v', '*', '*', '*', 'z', '*', '#', '*', 'm', '*', '#', 195, '*', 
+                                         /*64*/    '*', 'k', '*', 'x', '*', '*', '*', 129, '*', '\'', '*', 'b', '*', '\342', '*', 201, 
+                                         /*80*/    '*', '/', '*', 'v', '*', '*', '*', 'z', '*', 176, '*', 'm', '*', '\343', 195, '*', 
                                          /*96*/    '9', '*', '3', '*', 178, '*', '1', '*', '*', '*', '6', '*', 177, '*', '`', '*', 
                                          /*112*/   '-', '*', '5', '*', '*', '*', '2', '*', '*', '*', '8', '*', 207, '*', '*', 202, 
-                                         /*128*/   '*', ',', '*', 'c', '*', 131, '*', '*', '*', '*', '*', 'n', '*', '#', '*', '#', 
-                                         /*144*/   '*', '.', '*', ' ', '*', '#', '*', '*', '*', '#', '*', '*', '*', '#', '#', '*',
-                                         /*160*/   '0', '*', '4', '*', '*', '*', 'q', '*', '=', '*', 'y', '*', '#', '#', '#', '*', 
-                                         /*176*/   'p', '*', 'r', '*', '*', '*', 'w', '*', '\\', '*', '7', '*', '\351', '*', '#', '#', 
-                                         /*192*/   'i', '*', 'd', '*', '*', '*', '*', '*', '*', '*', 'h', '*', '\345', '*', '#', '*', 
+                                         /*128*/   '*', ',', '*', 'c', '*', 131, '*', 130, '*', '*', '*', 'n', '*', '\353', '*', 203, 
+                                         /*144*/   '*', '.', '*', ' ', '*', '\341', '*', '*', '*', 133, '*', '*', '*', '\337', 194, '*',
+                                         /*160*/   '0', '*', '4', '*', '*', '*', 'q', '*', '=', '*', 'y', '*', '\350', '#', 179, '*', 
+                                         /*176*/   'p', '*', 'r', '*', '*', '*', 'w', '*', '\\', '*', '7', '*', '\351', '*', 198, 200, 
+                                         /*192*/   'i', '*', 'd', '*', '*', '*', '*', '*', '*', '*', 'h', '*', '\345', '*', 199, '*', 
                                          /*208*/   'l', '*', 'f', '*', '\344', '*', 's', '*', ']', '*', 'j', '*', '\336', 205, '*', '*', 
                                          /*224*/   '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', 219, '*', '*', '*', '*', 
                                          /*240*/   '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*' };
@@ -85,7 +85,7 @@ void disambiguate(bool isRelease) {
       case 77:  if(isRelease == true) Keyboard.release(   KEY_DOWN_ARROW);
                 else                  Keyboard.press(     KEY_DOWN_ARROW);
                 break;
-      case 81:  if(isRelease == true) Keyboard.release(   '\334'); //  \ on num
+      case 81:  if(isRelease == true) Keyboard.release(   '\334'); //  / on num
                 else                  Keyboard.press(     '\334');
                 break;
       case 89:  if(isRelease == true) Keyboard.release(   '\340'); //NUM ENTER
@@ -119,107 +119,6 @@ void disambiguate(bool isRelease) {
   }
 }
 
-//This huge switch statement handles all of the single byte codes that aren't differentiable
-// to a single character
-// This can be simplified by placing the integers associated with each of these into the character table?
-void unprintable(int &keycode, bool isRelease) {
-
-  switch(keycode) {
-
-    //CAPS lock @todo, write led status change function
-    case 24:  if(isRelease == true) Keyboard.release(   KEY_CAPS_LOCK);
-              else                  Keyboard.press(     KEY_CAPS_LOCK);     
-              break;
-    //F11         
-    case 28:  if(isRelease == true)  Keyboard.release(  KEY_F11);
-              else                   Keyboard.press(    KEY_F11);
-              break;
-    //F3
-    case 31:  if(isRelease == true) Keyboard.release(   KEY_F3);
-              else                  Keyboard.press(     KEY_F3);
-              break;
-     // F4
-    case 46:  if(isRelease == true) Keyboard.release(   KEY_F4);
-              else                  Keyboard.press(     KEY_F4);
-              break;
-
-
-    //LEFT SHIFT      
-    case 71:  if(isRelease == true) Keyboard.release(    KEY_LEFT_SHIFT);
-              else                  Keyboard.press(      KEY_LEFT_SHIFT);
-              break;
-    //keypad 2          
-    case 77:  if(isRelease == true) Keyboard.release(   '\342');
-              else                  Keyboard.press(     '\342');
-              break;
-    // keypad '/'
-    case 81:  if(isRelease == true) Keyboard.release(   '\334');  //keypad /
-              else                  Keyboard.press(     '\334');
-              break;
-    //RETURN        
-    case 89:  if(isRelease == true) Keyboard.release(    KEY_RETURN);
-              else                  Keyboard.press(      KEY_RETURN);
-              break;
-    // keypad 3
-    case 93:  if(isRelease == true) Keyboard.release(   '\343');  //keypad 3
-              else                  Keyboard.press(     '\343');
-              break;
-
-    //LEFT ALT         
-    case 135: if(isRelease == true) Keyboard.release(    KEY_LEFT_ALT);
-              else                  Keyboard.press(      KEY_LEFT_ALT);
-              break;
-    // keypad ./del
-    case 141: if(isRelease == true) Keyboard.release(   '\353');
-              else                  Keyboard.press(     '\353');
-              break;
-    // F10          
-    case 143: if(isRelease == true) Keyboard.release(   KEY_F10);
-              else                   Keyboard.press(    KEY_F10);
-              break;
-    // keypad 1
-    case 149: if(isRelease == true) Keyboard.release(  '\341');
-              else                  Keyboard.press(    '\341');
-              break;
-    // RIGHT SHIFT
-    case 153: if(isRelease == true) Keyboard.release(  KEY_RIGHT_SHIFT);
-              else                  Keyboard.press(    KEY_RIGHT_SHIFT);
-             break;
-    // Something on the number pad         
-    case 157: if(isRelease == true) Keyboard.release(  '\337');
-              else                  Keyboard.press(    '\337');
-              break; 
-    //F1          
-    case 158: if(isRelease == true) Keyboard.release(   KEY_F1);
-              else                  Keyboard.press(     KEY_F1);
-              break;
-    // Something on the number pad
-    case 172: if(isRelease == true) Keyboard.release(   '\350');
-              else                  Keyboard.press(     '\350');
-              break;
-    //TAB 
-    case 174: if(isRelease == true) Keyboard.release(   KEY_TAB);
-              else                  Keyboard.press(     KEY_TAB);
-              break;
-
-    // F5
-    case 190: if(isRelease == true) Keyboard.release(   KEY_F5);
-              else                  Keyboard.press(     KEY_F5);
-              break;
-    // F7
-    case 191: if(isRelease == true) Keyboard.release(   KEY_F7);
-              else                  Keyboard.press(     KEY_F7);
-              break;
-    // F6          
-    case 206: if(isRelease == true) Keyboard.release(   KEY_F6);
-              else                  Keyboard.press(     KEY_F6);
-              break;
-
-
-    default:
-      Serial.print("ERROR: unprintable called, but did not find decodable keypress");    
-  }
-}
 //@ todo check parity bit and request resend
 int integerDecode() {
   int returner = 0;
@@ -231,8 +130,8 @@ int integerDecode() {
   }
   bitBufferRead += 2;
   if(bitBufferRead >= bitBuffer_SIZE) bitBufferRead = 0;
-  //Serial.print(returner);
-  //Serial.print('\n');
+  // Serial.print(returner);
+  // Serial.print('\n');
   return returner;
 }
  
