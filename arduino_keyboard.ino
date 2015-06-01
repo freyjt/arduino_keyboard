@@ -13,7 +13,7 @@ int        bitBufferRead             = 0;
 int        bitBufferWrite            = 0;
 int        bytesInQueue              = 0;
 bool       RUN_ON_PRESS              = false;
-// * denotes unknown code, used for debugging purposes
+// * denotes unknown code, used for debugging purposes or @todo resend requests
 // ! denotes release
 // @ denotes multi-byte code
 // # denotes unprintable code                       0    1    2    3    4    5    6    7    8    9    10   11   12   13   14   15  
@@ -69,10 +69,6 @@ void disambiguate(bool isRelease) {
   int decodedHere = integerDecode();
   if(lookupTable[decodedHere] == '!') disambiguate(true); //@todo still to slow
   else {
-    Serial.print("*");
-    Serial.print(decodedHere); 
-    Serial.print("*");
-    Serial.print("\n");
     switch(decodedHere) {
       case 13:  if(isRelease == true) Keyboard.release(   KEY_INSERT);
                 else                  Keyboard.press(     KEY_INSERT);
@@ -122,147 +118,168 @@ void disambiguate(bool isRelease) {
     }
   }
 }
+
+//This huge switch statement handles all of the single byte codes that aren'd differentiable
+// to a single character
 void unprintable(int &keycode, bool isRelease) {
   //switch statement to identify functions etc.
   Serial.print("unprintable "); Serial.print(keycode);
   switch(keycode) {
     //these should possibly be rearranged to order of most frequent use
-    case 13: if(isRelease == true) Keyboard.release( '\352'); // keypad 7
-             else                  Keyboard.press(   '\352');
-             break;
-    case 24: //CAPS lock @todo, write led status change function
-      if(isRelease == true) Keyboard.release(    KEY_CAPS_LOCK);
-      else                  Keyboard.press(      KEY_CAPS_LOCK);     
-      break;
-    case 28: if(isRelease == true)  Keyboard.release( KEY_F11);
-             else                   Keyboard.press(   KEY_F11);
-             break;
-    case 31: //F3
-      if(isRelease == true) Keyboard.release(    KEY_F3);
-      else                  Keyboard.press(      KEY_F3);
-      break;
-    case 39: //LEFT CTRL
-      if(isRelease == true) Keyboard.release(    KEY_LEFT_CTRL);
-      else                  Keyboard.press(      KEY_LEFT_CTRL);
-      break;
-    case 45: if(isRelease == true) Keyboard.release( '\346'); // keypad 7
-             else                  Keyboard.press(   '\346');
-             break;
-    case 46: // F4
-      if(isRelease == true) Keyboard.release(    KEY_F4);
-      else                  Keyboard.press(      KEY_F4);
-      break;
-    case 52: if(isRelease == true) Keyboard.release( '\347'); // keypad 7
-             else                  Keyboard.press(   '\347');
-             break;
-    case 60: if(isRelease == true) Keyboard.release(  '\335'); // keypad *
-             else                  Keyboard.press(    '\335');
-             break;
-           
-    case 71: //LEFT SHIFT
-      if(isRelease == true) Keyboard.release(    KEY_LEFT_SHIFT);
-      else                  Keyboard.press(      KEY_LEFT_SHIFT);
-      break;
-    case 77:  if(isRelease == true) Keyboard.release(  '\342'); //keypad 2
-              else                  Keyboard.press(    '\342');
+    case 13:  if(isRelease == true) Keyboard.release(   '\352'); // keypad 7
+              else                  Keyboard.press(     '\352');
               break;
-    case 79: if(isRelease == true) Keyboard.release( KEY_F8);
-             else                  Keyboard.press(   KEY_F8);
-             break;
-    case 81: if(isRelease == true) Keyboard.release(  '\334');  //keypad /
-             else                  Keyboard.press(    '\334');
-             break;
-    case 89: //RETURN
-      if(isRelease == true) Keyboard.release(    KEY_RETURN);
-      else                  Keyboard.press(      KEY_RETURN);
-      break;
-    case 93: if(isRelease == true) Keyboard.release(  '\343');  //keypad 3
-             else                  Keyboard.press(    '\343');
-             break;
-    case 94: //F2 
-      if(isRelease == true) Keyboard.release(    KEY_F2);
-      else                  Keyboard.press(      KEY_F2);
-      break;
-    case 100: //BACK SPACE
-      if(isRelease == true) Keyboard.release(    KEY_BACKSPACE);
-      else                  Keyboard.press(      KEY_BACKSPACE);
-      break;
-    case 108: // ESC
-      if(isRelease == true) Keyboard.release(    KEY_ESC);
-      else                  Keyboard.press(      KEY_ESC);
-      break;
-      
-    case 124: if(isRelease == true) Keyboard.release(  207); //SCROLL LOCK
-              else                  Keyboard.press(    207);
+    //CAPS lock @todo, write led status change function
+    case 24:  if(isRelease == true) Keyboard.release(   KEY_CAPS_LOCK);
+              else                  Keyboard.press(     KEY_CAPS_LOCK);     
               break;
-    case 127: if(isRelease == true) Keyboard.release( KEY_F9);
-             else                  Keyboard.press(   KEY_F9);
-             break;
-    case 133: // LEFT GUI
-      if(isRelease == true) Keyboard.release(    KEY_LEFT_GUI);
-      else                  Keyboard.press(      KEY_LEFT_GUI);
-      break;
-    case 135: //LEFT ALT
-      if(isRelease == true) Keyboard.release(    KEY_LEFT_ALT);
-      else                  Keyboard.press(      KEY_LEFT_ALT);
-      break;
-    case 141: // Right GUI
-      if(isRelease == true) Keyboard.release(    '\353');
-      else                  Keyboard.press(      '\353');
-      break;
-    case 143: if(isRelease == true) Keyboard.release( KEY_F10);
-             else                   Keyboard.press(   KEY_F10);
-             break;
-    case 149: if(isRelease == true) Keyboard.release(  '\341'); //keypad 1
+    //F11         
+    case 28:  if(isRelease == true)  Keyboard.release(  KEY_F11);
+              else                   Keyboard.press(    KEY_F11);
+              break;
+    //F3
+    case 31:  if(isRelease == true) Keyboard.release(   KEY_F3);
+              else                  Keyboard.press(     KEY_F3);
+              break;
+    //LEFT CTRL         
+    case 39:  if(isRelease == true) Keyboard.release(   KEY_LEFT_CTRL);
+              else                  Keyboard.press(     KEY_LEFT_CTRL);
+              break;
+    //keypad 7         
+    case 45:  if(isRelease == true) Keyboard.release(   '\346'); 
+              else                  Keyboard.press(     '\346');
+              break;
+     // F4
+    case 46:  if(isRelease == true) Keyboard.release(   KEY_F4);
+              else                  Keyboard.press(     KEY_F4);
+              break;
+    // keypad 7
+    case 52:  if(isRelease == true) Keyboard.release(  '\347'); 
+              else                  Keyboard.press(    '\347');
+              break;
+    // keypad *         
+    case 60:  if(isRelease == true) Keyboard.release(   '\335'); 
+              else                  Keyboard.press(     '\335');
+              break;
+    //LEFT SHIFT      
+    case 71:  if(isRelease == true) Keyboard.release(    KEY_LEFT_SHIFT);
+              else                  Keyboard.press(      KEY_LEFT_SHIFT);
+              break;
+    //keypad 2          
+    case 77:  if(isRelease == true) Keyboard.release(   '\342');
+              else                  Keyboard.press(     '\342');
+              break;
+    // F8
+    case 79:  if(isRelease == true) Keyboard.release(   KEY_F8);
+              else                  Keyboard.press(     KEY_F8);
+              break;
+    // keypad '/'
+    case 81:  if(isRelease == true) Keyboard.release(   '\334');  //keypad /
+              else                  Keyboard.press(     '\334');
+              break;
+    //RETURN        
+    case 89:  if(isRelease == true) Keyboard.release(    KEY_RETURN);
+              else                  Keyboard.press(      KEY_RETURN);
+              break;
+    // keypad 3
+    case 93:  if(isRelease == true) Keyboard.release(   '\343');  //keypad 3
+              else                  Keyboard.press(     '\343');
+              break;
+    //F2          
+    case 94:  if(isRelease == true) Keyboard.release(    KEY_F2);
+              else                  Keyboard.press(      KEY_F2);
+              break;
+    //BACK SPACE
+    case 100: if(isRelease == true) Keyboard.release(    KEY_BACKSPACE);
+              else                  Keyboard.press(      KEY_BACKSPACE);
+              break;
+    // ESC
+    case 108: if(isRelease == true) Keyboard.release(    KEY_ESC);
+              else                  Keyboard.press(      KEY_ESC);
+              break;
+    // Scroll lock
+    case 124: if(isRelease == true) Keyboard.release(    207); 
+              else                  Keyboard.press(      207);
+              break;
+    // F9
+    case 127: if(isRelease == true) Keyboard.release(    KEY_F9);
+              else                  Keyboard.press(      KEY_F9);
+              break;
+     // LEFT GUI (only gui key mapped
+    case 133: if(isRelease == true) Keyboard.release(    KEY_LEFT_GUI);
+              else                  Keyboard.press(      KEY_LEFT_GUI);
+              break;
+    //LEFT ALT         
+    case 135: if(isRelease == true) Keyboard.release(    KEY_LEFT_ALT);
+              else                  Keyboard.press(      KEY_LEFT_ALT);
+              break;
+    // keypad ./del
+    case 141: if(isRelease == true) Keyboard.release(   '\353');
+              else                  Keyboard.press(     '\353');
+              break;
+    // F10          
+    case 143: if(isRelease == true) Keyboard.release(   KEY_F10);
+              else                   Keyboard.press(    KEY_F10);
+              break;
+    // keypad 1
+    case 149: if(isRelease == true) Keyboard.release(  '\341');
               else                  Keyboard.press(    '\341');
               break;
-    case 153: // RIGHT SHIFT
-      if(isRelease == true) Keyboard.release(    KEY_RIGHT_SHIFT);
-      else                  Keyboard.press(      KEY_RIGHT_SHIFT);
-      break;
-    case 157: if(isRelease == true) Keyboard.release( '\337');
-              else                  Keyboard.press(   '\337');
-              break; 
-    case 158: //F1
-      if(isRelease == true) Keyboard.release(    KEY_F1);
-      else                  Keyboard.press(      KEY_F1);
-      break;
-    case 172: if(isRelease == true) Keyboard.release( '\350'); // keypad 8
-              else                  Keyboard.press(   '\350');
-              break;
-    case 174: //TAB
-      if(isRelease == true) Keyboard.release(   KEY_TAB);
-      else                  Keyboard.press(     KEY_TAB);
-      break;
-    case 188: if(isRelease == true) Keyboard.release( '\351'); //keypad 9
-              else                  Keyboard.press(   '\351');
-              break;
-    case 190: // F5
-      if(isRelease == true) Keyboard.release(   KEY_F5);
-      else                  Keyboard.press(     KEY_F5);
-      break;
-    case 191: // F7
-      if(isRelease == true) Keyboard.release(   KEY_F7);
-      else                  Keyboard.press(     KEY_F7);
-      break;
-    case 204: if(isRelease == true) Keyboard.release( '\345'); //keypad 5
-              else                  Keyboard.press(   '\345');
-              break;       
-    case 206: // F6
-      if(isRelease == true) Keyboard.release(   KEY_F6);
-      else                  Keyboard.press(     KEY_F6);
-      break;
-    case 212: if(isRelease == true) Keyboard.release( '\344'); //keypad 4
-              else                  Keyboard.press(   '\344');
-              break;      
-    case 220: if(isRelease == true) Keyboard.release( '\336'); //keypad -
-              else                  Keyboard.press(   '\336');
-              break;
-    case 221: if(isRelease == true)  Keyboard.release( KEY_F12);
-             else                   Keyboard.press(   KEY_F12);
+    // RIGHT SHIFT
+    case 153: if(isRelease == true) Keyboard.release(  KEY_RIGHT_SHIFT);
+              else                  Keyboard.press(    KEY_RIGHT_SHIFT);
              break;
-    case 235: if(isRelease == true) Keyboard.release( 219); //num lock
-              else                  Keyboard.press(   219);
+    // Something on the number pad         
+    case 157: if(isRelease == true) Keyboard.release(  '\337');
+              else                  Keyboard.press(    '\337');
+              break; 
+    //F1          
+    case 158: if(isRelease == true) Keyboard.release(   KEY_F1);
+              else                  Keyboard.press(     KEY_F1);
+              break;
+    // Something on the number pad
+    case 172: if(isRelease == true) Keyboard.release(   '\350');
+              else                  Keyboard.press(     '\350');
+              break;
+    //TAB 
+    case 174: if(isRelease == true) Keyboard.release(   KEY_TAB);
+              else                  Keyboard.press(     KEY_TAB);
+              break;
+    // keypad 9
+    case 188: if(isRelease == true) Keyboard.release(   '\351');
+              else                  Keyboard.press(     '\351');
+              break;
+    // F5
+    case 190: if(isRelease == true) Keyboard.release(   KEY_F5);
+              else                  Keyboard.press(     KEY_F5);
+              break;
+    // F7
+    case 191: if(isRelease == true) Keyboard.release(   KEY_F7);
+              else                  Keyboard.press(     KEY_F7);
+              break;
+    // keypad 5
+    case 204: if(isRelease == true) Keyboard.release(  '\345');
+              else                  Keyboard.press(    '\345');
+              break;
+    // F6          
+    case 206: if(isRelease == true) Keyboard.release(   KEY_F6);
+              else                  Keyboard.press(     KEY_F6);
+              break;
+    //keypad 4
+    case 212: if(isRelease == true) Keyboard.release(   '\344'); 
+              else                  Keyboard.press(     '\344');
+              break;
+    // keypad -
+    case 220: if(isRelease == true) Keyboard.release(   '\336'); 
+              else                  Keyboard.press(     '\336');
+              break;
+    // F12
+    case 221: if(isRelease == true)  Keyboard.release(  KEY_F12);
+              else                   Keyboard.press(    KEY_F12);
+              break;
+     //num lock
+    case 235: if(isRelease == true) Keyboard.release(   219);
+              else                  Keyboard.press(     219);
               break;
     default:
       Serial.print("ERROR: unprintable called, but did not find decodable keypress");    
