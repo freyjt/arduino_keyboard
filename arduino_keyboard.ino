@@ -19,8 +19,8 @@ bool       RUN_ON_PRESS              = false;
 // # denotes unprintable code                       0    1    2    3    4    5    6    7    8    9    10   11   12   13   14   15  
 const char lookupTable[256]          = { /*0*/     '&', '*', '*', '*', '*', '*', '@', '*', '*', '*', '*', '*', '*', '\352', '!', '*', 
                                          /*16*/    '*', '*', '*', '*', '*', '*', '*', '*', '#', '*', '*', '*', '#', '*', '*', '#',
-                                         /*32*/    '*', 'o', '*', 'e', '*', '*', '*', 128, '*', '[', '*', 'g', '*', '#', '#', '*', 
-                                         /*48*/    ';', '*', 't', '*', '#', '*', 'a', '*', '*', '*', 'u', '*', '#', '*', '*', '*', 
+                                         /*32*/    '*', 'o', '*', 'e', '*', '*', '*', 128, '*', '[', '*', 'g', '*', '\346', '#', '*', 
+                                         /*48*/    ';', '*', 't', '*', '\347', '*', 'a', '*', '*', '*', 'u', '*', '\335', '*', '*', '*', 
                                          /*64*/    '*', 'k', '*', 'x', '*', '*', '*', '#', '*', '\'', '*', 'b', '*', '#', '*', 201, 
                                          /*80*/    '*', '/', '*', 'v', '*', '*', '*', 'z', '*', '#', '*', 'm', '*', '#', 195, '*', 
                                          /*96*/    '9', '*', '3', '*', 178, '*', '1', '*', '*', '*', '6', '*', 177, '*', '`', '*', 
@@ -138,22 +138,12 @@ void unprintable(int &keycode, bool isRelease) {
     case 31:  if(isRelease == true) Keyboard.release(   KEY_F3);
               else                  Keyboard.press(     KEY_F3);
               break;
-    //keypad 7         
-    case 45:  if(isRelease == true) Keyboard.release(   '\346'); 
-              else                  Keyboard.press(     '\346');
-              break;
      // F4
     case 46:  if(isRelease == true) Keyboard.release(   KEY_F4);
               else                  Keyboard.press(     KEY_F4);
               break;
-    // keypad 7
-    case 52:  if(isRelease == true) Keyboard.release(  '\347'); 
-              else                  Keyboard.press(    '\347');
-              break;
-    // keypad *         
-    case 60:  if(isRelease == true) Keyboard.release(   '\335'); 
-              else                  Keyboard.press(     '\335');
-              break;
+
+
     //LEFT SHIFT      
     case 71:  if(isRelease == true) Keyboard.release(    KEY_LEFT_SHIFT);
               else                  Keyboard.press(      KEY_LEFT_SHIFT);
