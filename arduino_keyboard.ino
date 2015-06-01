@@ -30,8 +30,8 @@ const char lookupTable[256]          = { /*0*/     '&', '*', '*', '*', '*', '*',
                                          /*160*/   '0', '*', '4', '*', '*', '*', 'q', '*', '=', '*', 'y', '*', '#', '#', '#', '*', 
                                          /*176*/   'p', '*', 'r', '*', '*', '*', 'w', '*', '\\', '*', '7', '*', '#', '*', '#', '#', 
                                          /*192*/   'i', '*', 'd', '*', '*', '*', '*', '*', '*', '*', 'h', '*', '#', '*', '#', '*', 
-                                         /*208*/   'l', '*', 'f', '*', '#', '*', 's', '*', ']', '*', 'j', '*', '#', '#', '*', '*', 
-                                         /*224*/   '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '#', '*', '*', '*', '*', 
+                                         /*208*/   'l', '*', 'f', '*', '#', '*', 's', '*', ']', '*', 'j', '*', '#', 205, '*', '*', 
+                                         /*224*/   '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', 219, '*', '*', '*', '*', 
                                          /*240*/   '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*' };
                                          
 // Write all data to bitBuffer and deal with extra bits in read
@@ -64,7 +64,7 @@ void getData() {
 }
 
 void disambiguate(bool isRelease) {
-  Serial.print("disambiguate");
+
   if(bitBufferRead == bitBufferWrite) getData(); // make sure there is data to read
   int decodedHere = integerDecode();
   if(lookupTable[decodedHere] == '!') disambiguate(true); //@todo still to slow
@@ -119,11 +119,11 @@ void disambiguate(bool isRelease) {
   }
 }
 
-//This huge switch statement handles all of the single byte codes that aren'd differentiable
+//This huge switch statement handles all of the single byte codes that aren't differentiable
 // to a single character
+// This can be simplified by placing the integers associated with each of these into the character table?
 void unprintable(int &keycode, bool isRelease) {
-  //switch statement to identify functions etc.
-  Serial.print("unprintable "); Serial.print(keycode);
+
   switch(keycode) {
     //these should possibly be rearranged to order of most frequent use
     case 13:  if(isRelease == true) Keyboard.release(   '\352'); // keypad 7
@@ -273,14 +273,6 @@ void unprintable(int &keycode, bool isRelease) {
     case 220: if(isRelease == true) Keyboard.release(   '\336'); 
               else                  Keyboard.press(     '\336');
               break;
-    // F12
-    case 221: if(isRelease == true)  Keyboard.release(  KEY_F12);
-              else                   Keyboard.press(    KEY_F12);
-              break;
-     //num lock
-    case 235: if(isRelease == true) Keyboard.release(   219);
-              else                  Keyboard.press(     219);
-              break;
     default:
       Serial.print("ERROR: unprintable called, but did not find decodable keypress");    
   }
@@ -296,8 +288,8 @@ int integerDecode() {
   }
   bitBufferRead += 2;
   if(bitBufferRead >= bitBuffer_SIZE) bitBufferRead = 0;
-  Serial.print(returner);
-  Serial.print('\n');
+  //Serial.print(returner);
+  //Serial.print('\n');
   return returner;
 }
  
@@ -313,24 +305,9 @@ void setup() {
 // we alternate between getData (which will timeout on its own)
 //   and letting the keyboard bitBuffer
 int i = 0;
-bool runonce = false;
+
 void loop(){
   getData();
-  if(runonce == true) {
-    runonce = false;
-    digitalWrite(Ground_Clock, HIGH);
-    Serial.print("5 Seconds \n");
-    delay(2000);
-    Serial.print("3 Seconds \n");
-    delay(1000);
-    Serial.print("2 Seconds \n");
-    delay(1000);
-    Serial.print("1 Second \n");
-    delay(1000);
-    Serial.print("buffer should print now: \n"); 
-    digitalWrite(Ground_Clock, LOW); 
-  }
-  
   if( (bitBufferRead - bitBufferWrite) != 0) {
     while( (bitBufferRead - bitBufferWrite) != 0) {
       int decoded = integerDecode( ) ;
