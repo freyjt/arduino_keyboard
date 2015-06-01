@@ -17,9 +17,9 @@ bool       RUN_ON_PRESS              = false;
 // ! denotes release
 // @ denotes multi-byte code
 // # denotes unprintable code                       0    1    2    3    4    5    6    7    8    9    10   11   12   13   14   15  
-const char lookupTable[256]          = { /*0*/     '&', '*', '*', '*', '*', '*', '@', '*', '*', '*', '*', '*', '*', '#', '!', '*', 
+const char lookupTable[256]          = { /*0*/     '&', '*', '*', '*', '*', '*', '@', '*', '*', '*', '*', '*', '*', '\352', '!', '*', 
                                          /*16*/    '*', '*', '*', '*', '*', '*', '*', '*', '#', '*', '*', '*', '#', '*', '*', '#',
-                                         /*32*/    '*', 'o', '*', 'e', '*', '*', '*', '*', '*', '[', '*', 'g', '*', '#', '#', '*', 
+                                         /*32*/    '*', 'o', '*', 'e', '*', '*', '*', 128, '*', '[', '*', 'g', '*', '#', '#', '*', 
                                          /*48*/    ';', '*', 't', '*', '#', '*', 'a', '*', '*', '*', 'u', '*', '#', '*', '*', '*', 
                                          /*64*/    '*', 'k', '*', 'x', '*', '*', '*', '#', '*', '\'', '*', 'b', '*', '#', '*', 201, 
                                          /*80*/    '*', '/', '*', 'v', '*', '*', '*', 'z', '*', '#', '*', 'm', '*', '#', 195, '*', 
@@ -28,9 +28,9 @@ const char lookupTable[256]          = { /*0*/     '&', '*', '*', '*', '*', '*',
                                          /*128*/   '*', ',', '*', 'c', '*', 131, '*', '*', '*', '*', '*', 'n', '*', '#', '*', '#', 
                                          /*144*/   '*', '.', '*', ' ', '*', '#', '*', '*', '*', '#', '*', '*', '*', '#', '#', '*',
                                          /*160*/   '0', '*', '4', '*', '*', '*', 'q', '*', '=', '*', 'y', '*', '#', '#', '#', '*', 
-                                         /*176*/   'p', '*', 'r', '*', '*', '*', 'w', '*', '\\', '*', '7', '*', '#', '*', '#', '#', 
-                                         /*192*/   'i', '*', 'd', '*', '*', '*', '*', '*', '*', '*', 'h', '*', '#', '*', '#', '*', 
-                                         /*208*/   'l', '*', 'f', '*', '#', '*', 's', '*', ']', '*', 'j', '*', '#', 205, '*', '*', 
+                                         /*176*/   'p', '*', 'r', '*', '*', '*', 'w', '*', '\\', '*', '7', '*', '\351', '*', '#', '#', 
+                                         /*192*/   'i', '*', 'd', '*', '*', '*', '*', '*', '*', '*', 'h', '*', '\345', '*', '#', '*', 
+                                         /*208*/   'l', '*', 'f', '*', '\344', '*', 's', '*', ']', '*', 'j', '*', '\336', 205, '*', '*', 
                                          /*224*/   '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', 219, '*', '*', '*', '*', 
                                          /*240*/   '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*' };
                                          
@@ -125,10 +125,7 @@ void disambiguate(bool isRelease) {
 void unprintable(int &keycode, bool isRelease) {
 
   switch(keycode) {
-    //these should possibly be rearranged to order of most frequent use
-    case 13:  if(isRelease == true) Keyboard.release(   '\352'); // keypad 7
-              else                  Keyboard.press(     '\352');
-              break;
+
     //CAPS lock @todo, write led status change function
     case 24:  if(isRelease == true) Keyboard.release(   KEY_CAPS_LOCK);
               else                  Keyboard.press(     KEY_CAPS_LOCK);     
@@ -140,10 +137,6 @@ void unprintable(int &keycode, bool isRelease) {
     //F3
     case 31:  if(isRelease == true) Keyboard.release(   KEY_F3);
               else                  Keyboard.press(     KEY_F3);
-              break;
-    //LEFT CTRL         
-    case 39:  if(isRelease == true) Keyboard.release(   KEY_LEFT_CTRL);
-              else                  Keyboard.press(     KEY_LEFT_CTRL);
               break;
     //keypad 7         
     case 45:  if(isRelease == true) Keyboard.release(   '\346'); 
@@ -168,11 +161,6 @@ void unprintable(int &keycode, bool isRelease) {
     //keypad 2          
     case 77:  if(isRelease == true) Keyboard.release(   '\342');
               else                  Keyboard.press(     '\342');
-              break;
-    // F8
-    case 79:  if(isRelease == true) Keyboard.release(   KEY_F8);
-              else                  Keyboard.press(     KEY_F8);
-              Serial.print(KEY_F8);
               break;
     // keypad '/'
     case 81:  if(isRelease == true) Keyboard.release(   '\334');  //keypad /
@@ -223,10 +211,7 @@ void unprintable(int &keycode, bool isRelease) {
     case 174: if(isRelease == true) Keyboard.release(   KEY_TAB);
               else                  Keyboard.press(     KEY_TAB);
               break;
-    // keypad 9
-    case 188: if(isRelease == true) Keyboard.release(   '\351');
-              else                  Keyboard.press(     '\351');
-              break;
+
     // F5
     case 190: if(isRelease == true) Keyboard.release(   KEY_F5);
               else                  Keyboard.press(     KEY_F5);
@@ -235,22 +220,12 @@ void unprintable(int &keycode, bool isRelease) {
     case 191: if(isRelease == true) Keyboard.release(   KEY_F7);
               else                  Keyboard.press(     KEY_F7);
               break;
-    // keypad 5
-    case 204: if(isRelease == true) Keyboard.release(  '\345');
-              else                  Keyboard.press(    '\345');
-              break;
     // F6          
     case 206: if(isRelease == true) Keyboard.release(   KEY_F6);
               else                  Keyboard.press(     KEY_F6);
               break;
-    //keypad 4
-    case 212: if(isRelease == true) Keyboard.release(   '\344'); 
-              else                  Keyboard.press(     '\344');
-              break;
-    // keypad -
-    case 220: if(isRelease == true) Keyboard.release(   '\336'); 
-              else                  Keyboard.press(     '\336');
-              break;
+
+
     default:
       Serial.print("ERROR: unprintable called, but did not find decodable keypress");    
   }
