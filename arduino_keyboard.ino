@@ -21,11 +21,11 @@ const char lookupTable[256]          = { /*0*/     '&', '*', '*', '*', '*', '*',
                                          /*16*/    '*', '*', '*', '*', '*', '*', '*', '*', '#', '*', '*', '*', '#', '*', '*', '#',
                                          /*32*/    '*', 'o', '*', 'e', '*', '*', '*', '*', '*', '[', '*', 'g', '*', '#', '#', '*', 
                                          /*48*/    ';', '*', 't', '*', '#', '*', 'a', '*', '*', '*', 'u', '*', '#', '*', '*', '*', 
-                                         /*64*/    '*', 'k', '*', 'x', '*', '*', '*', '#', '*', '\'', '*', 'b', '*', '#', '*', '#', 
-                                         /*80*/    '*', '/', '*', 'v', '*', '*', '*', 'z', '*', '#', '*', 'm', '*', '#', '#', '*', 
-                                         /*96*/    '9', '*', '3', '*', '#', '*', '1', '*', '*', '*', '6', '*', '#', '*', '`', '*', 
-                                         /*112*/   '-', '*', '5', '*', '*', '*', '2', '*', '*', '*', '8', '*', '#', '*', '*', '#', 
-                                         /*128*/   '*', ',', '*', 'c', '*', '#', '*', '*', '*', '*', '*', 'n', '*', '#', '*', '#', 
+                                         /*64*/    '*', 'k', '*', 'x', '*', '*', '*', '#', '*', '\'', '*', 'b', '*', '#', '*', 201, 
+                                         /*80*/    '*', '/', '*', 'v', '*', '*', '*', 'z', '*', '#', '*', 'm', '*', '#', 195, '*', 
+                                         /*96*/    '9', '*', '3', '*', 178, '*', '1', '*', '*', '*', '6', '*', 177, '*', '`', '*', 
+                                         /*112*/   '-', '*', '5', '*', '*', '*', '2', '*', '*', '*', '8', '*', 207, '*', '*', 202, 
+                                         /*128*/   '*', ',', '*', 'c', '*', 131, '*', '*', '*', '*', '*', 'n', '*', '#', '*', '#', 
                                          /*144*/   '*', '.', '*', ' ', '*', '#', '*', '*', '*', '#', '*', '*', '*', '#', '#', '*',
                                          /*160*/   '0', '*', '4', '*', '*', '*', 'q', '*', '=', '*', 'y', '*', '#', '#', '#', '*', 
                                          /*176*/   'p', '*', 'r', '*', '*', '*', 'w', '*', '\\', '*', '7', '*', '#', '*', '#', '#', 
@@ -172,6 +172,7 @@ void unprintable(int &keycode, bool isRelease) {
     // F8
     case 79:  if(isRelease == true) Keyboard.release(   KEY_F8);
               else                  Keyboard.press(     KEY_F8);
+              Serial.print(KEY_F8);
               break;
     // keypad '/'
     case 81:  if(isRelease == true) Keyboard.release(   '\334');  //keypad /
@@ -185,30 +186,7 @@ void unprintable(int &keycode, bool isRelease) {
     case 93:  if(isRelease == true) Keyboard.release(   '\343');  //keypad 3
               else                  Keyboard.press(     '\343');
               break;
-    //F2          
-    case 94:  if(isRelease == true) Keyboard.release(    KEY_F2);
-              else                  Keyboard.press(      KEY_F2);
-              break;
-    //BACK SPACE
-    case 100: if(isRelease == true) Keyboard.release(    KEY_BACKSPACE);
-              else                  Keyboard.press(      KEY_BACKSPACE);
-              break;
-    // ESC
-    case 108: if(isRelease == true) Keyboard.release(    KEY_ESC);
-              else                  Keyboard.press(      KEY_ESC);
-              break;
-    // Scroll lock
-    case 124: if(isRelease == true) Keyboard.release(    207); 
-              else                  Keyboard.press(      207);
-              break;
-    // F9
-    case 127: if(isRelease == true) Keyboard.release(    KEY_F9);
-              else                  Keyboard.press(      KEY_F9);
-              break;
-     // LEFT GUI (only gui key mapped
-    case 133: if(isRelease == true) Keyboard.release(    KEY_LEFT_GUI);
-              else                  Keyboard.press(      KEY_LEFT_GUI);
-              break;
+
     //LEFT ALT         
     case 135: if(isRelease == true) Keyboard.release(    KEY_LEFT_ALT);
               else                  Keyboard.press(      KEY_LEFT_ALT);
