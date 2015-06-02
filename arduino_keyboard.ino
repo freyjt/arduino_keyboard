@@ -100,7 +100,25 @@ void disambiguate(bool isRelease) {
                 break;
       case 52:  if(isRelease == true) Keyboard.release(   KEY_HOME);
                 else                  Keyboard.press(     KEY_HOME);
-                break;                
+                break;
+      // case 60 and 71 relate to print screen are not robust, but work
+      case 60:  if(isRelease == true) {
+                   if(bitBufferRead == bitBufferWrite) getData();
+                   if(bitBufferRead == bitBufferWrite) getData();
+                   if(bitBufferRead == bitBufferWrite) getData();
+                   integerDecode();
+                   integerDecode();
+                   integerDecode();
+                   Keyboard.release(206);
+                } else{/*should never see this block*/} 
+      case 71:  if(isRelease == true) {/*should never see this*/}
+                else {
+                   if(bitBufferRead == bitBufferWrite) getData();
+                   if(bitBufferRead == bitBufferWrite) getData();
+                   integerDecode();
+                   integerDecode();
+                   Keyboard.press(206);
+                }      
       case 77:  if(isRelease == true) Keyboard.release(   KEY_DOWN_ARROW);
                 else                  Keyboard.press(     KEY_DOWN_ARROW);
                 break;
