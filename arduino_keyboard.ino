@@ -160,8 +160,7 @@ int integerDecode() {
   }
   bitBufferRead += 2;
   if(bitBufferRead >= bitBuffer_SIZE) bitBufferRead = 0;
-  Serial.print(returner);
-  Serial.print('\n');
+  //Serial.print(returner); Serial.print("\n");
   return returner;
 }
  
@@ -183,19 +182,15 @@ void loop(){
 
       int decoded = integerDecode( ) ;
       
-      if( decoded == 28 ) { //super slow, may want to change to decoded == 28
+      if( decoded == 14 ) { //super slow, may want to change to decoded == 28
         if(bitBufferRead == bitBufferWrite) getData(); //nothing to decode, so we read more
         int decodedHere = integerDecode();
         Keyboard.release(lookupTable[decodedHere]);
       }
       else if( lookupTable[decoded] == '*') Keyboard.releaseAll();
-      else if( lookupTable[decoded] == '@') { //multi-byte code
-        disambiguate( false );
-      }
-      else {
-        Keyboard.press( lookupTable[decoded] );
-      }
-    }
+      else if( lookupTable[decoded] == '@') disambiguate( false );
+      else Keyboard.press( lookupTable[decoded] );
+    
+    } 
   }
 }
-
