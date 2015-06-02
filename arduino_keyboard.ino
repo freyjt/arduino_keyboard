@@ -191,12 +191,14 @@ void loop(){
     while( (bitBufferRead - bitBufferWrite) != 0) {
 
       int decoded = integerDecode( ) ;
+
       
       if( decoded == 28 ) { //super slow, may want to change to decoded == 28
         if(bitBufferRead == bitBufferWrite) getData(); //nothing to decode, so we read more
         int decodedHere = integerDecode();
         Keyboard.release(lookupTable[decodedHere]);
       }
+      else if( lookupTable[decoded] == '*') Keyboard.releaseAll();
       else if( lookupTable[decoded] == '@') { //multi-byte code
         disambiguate( false );
       }
