@@ -45,16 +45,6 @@ void writeBitBuffer(bool writeIn) {
     bitBufferWrite = 0;
 }
 
-
-//nothingToSend
-// @return false when host would like to take over keyboard
-// @return true  when host doesn't need control
-bool nothingToSend() {
-    
-    return true;
-
-}
-
 // getData reads a single frame from the keyboard. Refuses to do anything
 //    until data comes in.
 //  @todo - write nosend() to when host would like to write to keyboard
@@ -63,7 +53,9 @@ void getData() {
   int counter = 0; //reset on bit
   int counter_MAX = 1000; //adjust to time out @todo 1000 works, see if you can go lower
   //wait for a falling edge to measure, acceptable because we can't do anything without data
-  while(nothingToSend() == true && digitalRead(Clock) == 1) { /*check those two booleans again*/ }
+  //  if we need to communicate from host to keyboard, we should do that immediately on a lock
+  //  being pressed.
+  while(digitalRead(Clock) == 1) { /*check those two booleans again*/ }
   //take in whatever data we can and wait to make sure
   //   there is no more
   while(counter < counter_MAX) {
@@ -76,7 +68,6 @@ void getData() {
     counter++; //increment to timeout clock pulses
   }
   digitalWrite(Ground_Clock, HIGH); //doing this to make sure keyboard buffers when we aren't expecting data
-
 }
 
 // disambiguate() is used to identify keystrokes that come from multibyte keys
@@ -191,7 +182,6 @@ void loop(){
     while( (bitBufferRead - bitBufferWrite) != 0) {
 
       int decoded = integerDecode( ) ;
-
       
       if( decoded == 28 ) { //super slow, may want to change to decoded == 28
         if(bitBufferRead == bitBufferWrite) getData(); //nothing to decode, so we read more
