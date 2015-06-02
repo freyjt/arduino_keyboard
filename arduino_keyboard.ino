@@ -33,21 +33,37 @@ const char lookupTable[256]          = { /*0*/     '&', '*', '*', '*', '*', '*',
                                          /*208*/   'l', '*', 'f', '*', '\344', '*', 's', '*', ']', '*', 'j', '*', '\336', 205, '*', '*', 
                                          /*224*/   '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', 219, '*', '*', '*', '*', 
                                          /*240*/   '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*', '*' };
-                                         
-// Write all data to bitBuffer and deal with extra bits in read
-// (quicker to ignore than to decide not to write)
+                       
+// writeBitBuffer: writes a single bit to the buffer and decides when to roll over                                         
+// we write all data to bitBuffer and deal with extra bits in read
+//  (there is an 11 bit frame for ever byte sent, it's
+//   quicker to ignore known worthless bits than to decide not to write
+//    certain bits)
 void writeBitBuffer(bool writeIn) {
   bitBuffer[bitBufferWrite++] = writeIn;
   if(bitBufferWrite >= bitBuffer_SIZE)
     bitBufferWrite = 0;
 }
 
+
+//nothingToSend
+// @return false when host would like to take over keyboard
+// @return true  when host doesn't need control
+bool nothingToSend() {
+    
+    return true;
+
+}
+
+// getData reads a single frame from the keyboard. Refuses to do anything
+//    until data comes in.
+//  @todo - write nosend() to when host would like to write to keyboard
 void getData() {
   digitalWrite(Ground_Clock, LOW); //make sure keyboard can transmit
   int counter = 0; //reset on bit
   int counter_MAX = 1000; //adjust to time out @todo 1000 works, see if you can go lower
   //wait for a falling edge to measure, acceptable because we can't do anything without data
-  while(digitalRead(Clock) == 1) { }
+  while(nothingToSend() == true && digitalRead(Clock) == 1) { /*check those two booleans again*/ }
   //take in whatever data we can and wait to make sure
   //   there is no more
   while(counter < counter_MAX) {
@@ -63,6 +79,9 @@ void getData() {
 
 }
 
+// disambiguate() is used to identify keystrokes that come from multibyte keys
+// @isRelease - is the key being pressed or released. Called false initially, then recursively
+//              called true once a release code is read.
 void disambiguate(bool isRelease) {
 
   if(bitBufferRead == bitBufferWrite) getData(); // make sure there is data to read
@@ -119,6 +138,8 @@ void disambiguate(bool isRelease) {
   }
 }
 
+//integerDecode: Checks a single frame of the buffer and returns an
+//   integer that can be directly looked up in the table array.
 //@ todo check parity bit and request resend
 int integerDecode() {
   int returner = 0;
@@ -135,36 +156,34 @@ int integerDecode() {
   return returner;
 }
  
+// Creates the output objects for the machine
 void setup() {
    pinMode(Clock, INPUT);
    pinMode(Data,  INPUT);
    pinMode(Ground_Clock, OUTPUT);
    digitalWrite(Ground_Clock, LOW);
-   Serial.begin(9600);
+   Serial.begin(9600); //Can and should be removed when a stable version is made
    Keyboard.begin();
 }
 
-// we alternate between getData (which will timeout on its own)
-//   and letting the keyboard bitBuffer
-int i = 0;
-
+//loop arduino IDE compatible. Waits for key input then decodes it.
 void loop(){
   getData();
   if( (bitBufferRead - bitBufferWrite) != 0) {
     while( (bitBufferRead - bitBufferWrite) != 0) {
+
       int decoded = integerDecode( ) ;
-      if( lookupTable[decoded] == '!') { //super slow, may want to change to decoded == 28
+      
+      if( decoded == 28 ) { //super slow, may want to change to decoded == 28
         if(bitBufferRead == bitBufferWrite) getData(); //nothing to decode, so we read more
         int decodedHere = integerDecode();
-        if(lookupTable[decodedHere] == '#') unprintable(decodedHere, true);
-        else Keyboard.release(lookupTable[decodedHere]);
+        Keyboard.release(lookupTable[decodedHere]);
       }
       else if( lookupTable[decoded] == '@') { //multi-byte code
         disambiguate( false );
       }
       else {
-        if(lookupTable[decoded] == '#') unprintable(decoded, false);
-        else Keyboard.press( lookupTable[decoded] );
+        Keyboard.press( lookupTable[decoded] );
       }
     }
   }
