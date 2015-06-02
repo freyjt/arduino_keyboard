@@ -169,8 +169,8 @@ int integerDecode() {
   }
   bitBufferRead += 2;
   if(bitBufferRead >= bitBuffer_SIZE) bitBufferRead = 0;
-  // Serial.print(returner);
-  // Serial.print('\n');
+  Serial.print(returner);
+  Serial.print('\n');
   return returner;
 }
  
