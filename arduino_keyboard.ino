@@ -77,7 +77,7 @@ void disambiguate(bool isRelease) {
 
   if(bitBufferRead == bitBufferWrite) getData(); // make sure there is data to read
   int decodedHere = integerDecode();
-  if(lookupTable[decodedHere] == '!') disambiguate(true); //@todo still to slow
+  if(decodedHere == 14) disambiguate(true); //Found release character
   else {
     switch(decodedHere) {
       case 13:  if(isRelease == true) Keyboard.release(   KEY_INSERT);
