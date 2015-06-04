@@ -8,20 +8,22 @@ PROGRAMMER: Joshua T. Frey
 HOW TO USE: Key connector pinouts can be easily foud online.
             There are 4 used lines on the connector (whether 5 or 6 pin DIN)
 
-            +5v - on the keyboards I've tested this can be connected directly to
+            +5v - On the keyboards I've tested this can be connected directly to
                   the voltage from the arduino.
-            CLK - the keyboard generates it's on clock signal for data transfer
+            CLK - The keyboard generates it's on clock signal for data transfer
                   the pin for this connection is obvious in the code, and should
-                  be checked and adjusted accordingly
-            DATA- same method as clock
-            GND - can be connected straight to ground
+                  be checked and adjusted accordingly.
+                  We also need to wire a transistor controlled from the ground_clock
+                  (in code) pin to the clock and ground. 
+            DATA- same method as clock, without a transistor.
+            GND - can be connected straight to arduino ground
 
             Simply hook everything up and program the MCU with an Arduino IDE compatible
             compiler, your keyboard should work.
 
-KNOWN ISSUES:  print screen and pause break are not decoding yet, and hitting these keys
-               will require a restart of the MCU
+KNOWN ISSUES:  Pause Break is not decoding yet, but does cause a release all sequence when
+               pressed, so can sometimes act as a keyboard reset, without resetting the MCU.
 
-               full two way communication between the arduino and keyboard is not implemented.
+               Full two way communication between the arduino and keyboard is not implemented.
                As such, the lock lights will not turn on with the lock. Also, errors are fatal
                and will require an MCU restart
