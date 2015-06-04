@@ -101,7 +101,8 @@ void disambiguate(bool isRelease) {
                    integerDecode();
                    integerDecode();
                    Keyboard.release(206);
-                } else{/*should never see this block*/} 
+                } else{/*should never see this block*/}
+                break;
       case 71:  if(isRelease == true) {/*should never see this*/}
                 else {
                    if(bitBufferRead == bitBufferWrite) getData();
@@ -109,7 +110,8 @@ void disambiguate(bool isRelease) {
                    integerDecode();
                    integerDecode();
                    Keyboard.press(206);
-                }      
+                }
+                break;   
       case 77:  if(isRelease == true) Keyboard.release(   KEY_DOWN_ARROW);
                 else                  Keyboard.press(     KEY_DOWN_ARROW);
                 break;
