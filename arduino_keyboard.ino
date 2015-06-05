@@ -1,8 +1,12 @@
-//NOTE: keyboard will only buffer 17 bytes..
-//this may or may not need to be worked around depending on how fast you can make the reciever
-//   you could also only deal with x amount of bytes at a time and buffer locally as many as you need
+// Programmer:  Joshua T. Frey
+// Project:     arduino_keyboard
+// Purpose:     provides a pass through interface for an AT protocol keyboard
+//              to be used with a USB-only computer.
+//              Please see the README for known issues and description of use
+//
+// Liscense:    GNU 3. Please see the liscense in the git repo for details
 
-
+//NOTE:The keyboard I tested buffered 17 bytes
 const int  Clock                     = 10; //pin to receive kbd clock
 const int  Data                      = 16; //pin to receive kbd data
 const int  Ground_Clock              = 14; //pin to send clock to ground
