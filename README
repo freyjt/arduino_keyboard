@@ -24,6 +24,9 @@ HOW TO USE: Key connector pinouts can be easily foud online.
 KNOWN ISSUES:  Pause Break is not decoding yet, but does cause a release all sequence when
                pressed, so can sometimes act as a keyboard reset, without resetting the MCU.
 
+               Certain keys will occasionally become unresponsive, pause break often clears
+               the issue.
+               
                Full two way communication between the arduino and keyboard is not implemented.
-               As such, the lock lights will not turn on with the lock. Also, errors are fatal
-               and will require an MCU restart
+               As such, the lock lights will not turn on with the lock. Also, many errors are 
+               fatal and will require an MCU restart.
