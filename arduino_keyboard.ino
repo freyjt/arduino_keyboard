@@ -16,7 +16,7 @@ bool       bitBuffer[bitBuffer_SIZE] = { 0 };
 int        bitBufferRead             = 0;
 int        bitBufferWrite            = 0;
 int        bytesInQueue              = 0;
-bool       RUN_ON_PRESS              = false;
+
 // * denotes unknown code, used for debugging purposes or @todo resend requests
 // ! denotes release
 // @ denotes multi-byte code  
@@ -64,7 +64,7 @@ void getData() {
   //   there is no more
   while(counter < counter_MAX) {
     if(digitalRead(Clock) != 1) { //on clock's falling edge
-      RUN_ON_PRESS = true;
+
       writeBitBuffer( digitalRead(Data) );
       counter = 0;
       while(digitalRead(Clock) != 1){} //do nothing till next rising edge
@@ -169,7 +169,36 @@ int integerDecode() {
   Serial.print(returner); Serial.print("\n");
   return returner;
 }
- 
+
+
+void hostSpeaks() {
+  Serial.print("Delay");
+  delay(5000);
+   int counter = 0;
+   Serial.print("Entered hostSpeakes()");
+   digitalWrite(Ground_Clock, HIGH); //tell the keyboard we want to talk
+   while(counter < 100) { counter++; }
+   digitalWrite(Ground_Clock, LOW);
+   Serial.print("Expect something: ");
+   int bitCounter   = 0;
+   counter          = 0;
+   int counter_MAX  = 1000;
+   while(digitalRead(Clock) == 1) { /*check those two booleans again*/ }
+   //take in whatever data we can and wait to make sure
+   //   there is no more
+   while(counter < counter_MAX) {
+    if(digitalRead(Clock) != 1) { //on clock's falling edge
+      bitCounter++;
+      counter = 0;
+      while(digitalRead(Clock) != 1){} //do nothing till next rising edge
+    }
+    counter++; //increment to timeout clock pulses
+  }
+  digitalWrite(Ground_Clock, HIGH); //doing this to make sure keyboard buffers when we aren't expecting data
+  Serial.print(bitCounter);
+}
+
+
 // Creates the output objects for the machine
 void setup() {
    pinMode(Clock, INPUT);
@@ -182,6 +211,7 @@ void setup() {
 
 //loop arduino IDE compatible. Waits for key input then decodes it.
 void loop(){
+ /* remove the object while we work on communication
   getData();
   if( (bitBufferRead - bitBufferWrite) != 0) {
     while( (bitBufferRead - bitBufferWrite) != 0) {
@@ -199,4 +229,7 @@ void loop(){
     
     } 
   }
+  */
+  Serial.print("BBack in main loop");
+  hostSpeaks();
 }
