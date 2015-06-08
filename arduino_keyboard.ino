@@ -172,18 +172,18 @@ int integerDecode() {
 
 
 void hostSpeaks() {
-  Serial.print("Delay");
-  delay(5000);
+  Serial.print("Delay\n");
+ // Keyboard.press('K'); Keyboard.releaseAll();
    int counter = 0;
-   Serial.print("Entered hostSpeakes()");
+   Serial.print("Entered hostSpeakes \n");
    digitalWrite(Ground_Clock, HIGH); //tell the keyboard we want to talk
-   while(counter < 100) { counter++; }
+   while(counter < 10000) { counter++; }
    digitalWrite(Ground_Clock, LOW);
-   Serial.print("Expect something: ");
+   Serial.print("Expect something ");
    int bitCounter   = 0;
    counter          = 0;
    int counter_MAX  = 1000;
-   while(digitalRead(Clock) == 1) { /*check those two booleans again*/ }
+   while(digitalRead(Clock) == 1) {/*Serial.print("UM \n"); /*check those two booleans again*/ }
    //take in whatever data we can and wait to make sure
    //   there is no more
    while(counter < counter_MAX) {
@@ -210,6 +210,8 @@ void setup() {
 }
 
 //loop arduino IDE compatible. Waits for key input then decodes it.
+
+
 void loop(){
  /* remove the object while we work on communication
   getData();
@@ -230,6 +232,7 @@ void loop(){
     } 
   }
   */
-  Serial.print("BBack in main loop");
-  hostSpeaks();
+  delay(4000);
+  Serial.print("BBack in main loop \n");
+  hostSpeaks( );
 }
