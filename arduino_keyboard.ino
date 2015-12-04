@@ -49,7 +49,7 @@ int getNextByte( ) {
 int decodeFrame(bool* frameIn) {
   int returner = 0;
   for( int i = 8; i > 0; i-- ) {
-    returner += (int)frameIn[i] * pow(2, i - 1); 
+    returner += (int)frameIn[9 - i] * pow(2, i - 1); 
   }
   return returner;
 }
@@ -78,10 +78,12 @@ void getData() {
       frame[bitCounter++] = digitalRead(Data);
       //check if we got an entire frame
       if(bitCounter == 11) {
+        digitalWrite(Ground_Clock, HIGH);
         byteBuffer[byteBufferWrite++] = decodeFrame( frame );
         Serial.print(byteBuffer[byteBufferWrite - 1]);
         if(byteBufferWrite == byteBufferSize) byteBufferWrite = 0;
         bitCounter = 0;
+        digitalWrite(Ground_Clock, LOW);
       }
       while(digitalRead(Clock) != 1){} //do nothing till next rising edge
     }
