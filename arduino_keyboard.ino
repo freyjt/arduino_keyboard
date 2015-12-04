@@ -7,12 +7,19 @@
 // Liscense:    GNU 3. Please see the liscense in the git repo for details
 
 //NOTE:The keyboard I tested buffered 17 bytes
+#include <Keyboard.h>
 const int  Clock                     = 10; //pin to receive kbd clock
 const int  Data                      = 16; //pin to receive kbd data
 const int  Ground_Clock              = 14; //pin to send clock to ground
 const int  FRAME_SIZE                = 11;
-const int  bitBuffer_SIZE            = 99; // in bits, equates to 9 frames
+const int  bitBuffer_SIZE            = FRAME_SIZE * 17; // in bits, equates to 9 frames
 bool       bitBuffer[bitBuffer_SIZE] = { 0 };
+
+const int  byteBufferSize            = 22;
+int        byteBuffer[byteBufferSize]= {0};
+int        byteBufferRead            = 0;
+int        byteBufferWrite           = 0;
+
 int        bitBufferRead             = 0;
 int        bitBufferWrite            = 0;
 int        bytesInQueue              = 0;
@@ -38,38 +45,48 @@ const char lookupTable[256]          = { /*0*/     '&',   '*',   '*',   '*',   '
                                          /*224*/   '*',   '*',   '*',   '*',   '*',   '*',   '*',   '*',   '*',   '*',   '*',   219,   '*',   '*',   '*',   '*', 
                                          /*240*/   '*',   '*',   '*',   '*',   '*',   '*',   '*',   '*',   '*',   '*',   '*',   '*',   '*',   '*',   '*',   '*' };
 
-// writeBitBuffer: writes a single bit to the buffer and decides when to roll over                                         
-// we write all data to bitBuffer and deal with extra bits in read
-//  (there is an 11 bit frame for ever byte sent, it's
-//   quicker to ignore known worthless bits than to decide not to write
-//    certain bits)
-void writeBitBuffer(bool writeIn) {
-  bitBuffer[bitBufferWrite++] = writeIn;
-  if(bitBufferWrite >= bitBuffer_SIZE)
-    bitBufferWrite = 0;
-}
 
+int getNextByte( ) {
+  if(byteBufferRead == byteBufferWrite) getData();
+  int returner = byteBuffer[byteBufferRead++];
+  if(byteBufferRead == byteBufferSize) byteBufferRead = 0;
+  return returner;
+}
+int decodeFrame(bool* frameIn) {
+  int returner = 0;
+  for( int i = 9; i > 1; i++ ) {
+    returner += (int)frameIn[i] * pow(2, i - 1); 
+  }
+  return returner;
+}
 // getData reads a single frame from the keyboard. Refuses to do anything
 //    until data comes in.
 //  @todo - write nosend() to when host would like to write to keyboard
 void getData() {
   digitalWrite(Ground_Clock, LOW); //make sure keyboard can transmit
-  int counter = 0; //reset on bit
-  int counter_MAX = 1000; //adjust to time out @todo 1000 works, see if you can go lower
+  bool frame[11] = {0};
+  int bitCounter = 0;
+  int tCounter = 0; //reset on bit
+  int tCounter_MAX = 1000; //adjust to time out @todo 1000 works, see if you can go lower
   //wait for a falling edge to measure, acceptable because we can't do anything without data
   //  if we need to communicate from host to keyboard, we should do that immediately on a lock
   //  being pressed.
   while(digitalRead(Clock) == 1) { /*check those two booleans again*/ }
   //take in whatever data we can and wait to make sure
   //   there is no more
-  while(counter < counter_MAX) {
+  while(tCounter < tCounter_MAX) {
     if(digitalRead(Clock) != 1) { //on clock's falling edge
-      RUN_ON_PRESS = true;
-      writeBitBuffer( digitalRead(Data) );
-      counter = 0;
+      tCounter = 0; //reset if we got a bit
+      frame[bitCounter++] = digitalRead(Data);
+      //check if we got an entire frame
+      if(bitCounter == 11) { 
+        byteBuffer[byteBufferWrite++] = decodeFrame(frame);
+        if(byteBufferWrite == byteBufferSize) byteBufferWrite = 0;
+        bitCounter = 0;
+      }
       while(digitalRead(Clock) != 1){} //do nothing till next rising edge
     }
-    counter++; //increment to timeout clock pulses
+    tCounter++; //increment to timeout clock pulses
   }
   digitalWrite(Ground_Clock, HIGH); //doing this to make sure keyboard buffers when we aren't expecting data
 }
@@ -79,8 +96,7 @@ void getData() {
 //              called true once a release code is read.
 void disambiguate(bool isRelease) {
 
-  if(bitBufferRead == bitBufferWrite) getData(); // make sure there is data to read
-  int decodedHere = integerDecode();
+  int decodedHere = getNextByte();
   if(decodedHere == 14) disambiguate(true); //Found release character
   else {
     switch(decodedHere) {
@@ -98,12 +114,9 @@ void disambiguate(bool isRelease) {
                 break;
       // case 60 and 71 relate to print screen are not robust, but work
       case 60:  if(isRelease == true) {
-                   if(bitBufferRead == bitBufferWrite) getData();
-                   if(bitBufferRead == bitBufferWrite) getData();
-                   if(bitBufferRead == bitBufferWrite) getData();
-                   integerDecode();
-                   integerDecode();
-                   integerDecode();
+                   getNextByte();
+                   getNextByte();
+                   getNextByte();
                    Keyboard.release(206);
                 } else{/*should never see this block*/}
                 break;
@@ -153,23 +166,6 @@ void disambiguate(bool isRelease) {
   }
 }
 
-//integerDecode: Checks a single frame of the buffer and returns an
-//   integer that can be directly looked up in the table array.
-//@ todo check parity bit and request resend
-int integerDecode() {
-  int returner = 0;
-  //ignore first bit
-  bitBufferRead++;
-  for( int ender = bitBufferRead + 8; bitBufferRead < ender; bitBufferRead++ ) {
-    //this inverts the significance of the bits
-    returner += (int)bitBuffer[bitBufferRead] * pow(2, ender - bitBufferRead - 1); 
-  }
-  bitBufferRead += 2;
-  if(bitBufferRead >= bitBuffer_SIZE) bitBufferRead = 0;
-  Serial.print(returner); Serial.print("\n");
-  return returner;
-}
- 
 // Creates the output objects for the machine
 void setup() {
    pinMode(Clock, INPUT);
@@ -190,13 +186,13 @@ void loop(){
       
       if( decoded == 14 ) { //super slow, may want to change to decoded == 28
         if(bitBufferRead == bitBufferWrite) getData(); //nothing to decode, so we read more
-        int decodedHere = integerDecode();
+        int decodedHere = getNextByte();
         Keyboard.release(lookupTable[decodedHere]);
       }
       else if( lookupTable[decoded] == '*') Keyboard.releaseAll();
       else if( lookupTable[decoded] == '@') disambiguate( false );
       else Keyboard.press( lookupTable[decoded] );
-    
     } 
   }
+  
 }
