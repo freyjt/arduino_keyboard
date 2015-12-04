@@ -12,18 +12,12 @@ const int  Clock                     = 10; //pin to receive kbd clock
 const int  Data                      = 16; //pin to receive kbd data
 const int  Ground_Clock              = 14; //pin to send clock to ground
 const int  FRAME_SIZE                = 11;
-const int  bitBuffer_SIZE            = FRAME_SIZE * 17; // in bits, equates to 9 frames
-bool       bitBuffer[bitBuffer_SIZE] = { 0 };
 
 const int  byteBufferSize            = 22;
 int        byteBuffer[byteBufferSize]= {0};
 int        byteBufferRead            = 0;
 int        byteBufferWrite           = 0;
 
-int        bitBufferRead             = 0;
-int        bitBufferWrite            = 0;
-int        bytesInQueue              = 0;
-bool       RUN_ON_PRESS              = false;
 // * denotes unknown code, used for debugging purposes or @todo resend requests
 // ! denotes release
 // @ denotes multi-byte code  
@@ -48,17 +42,19 @@ const char lookupTable[256]          = { /*0*/     '&',   '*',   '*',   '*',   '
 
 int getNextByte( ) {
   if(byteBufferRead == byteBufferWrite) getData();
-  int returner = byteBuffer[byteBufferRead++];
+  int returner = byteBuffer[ byteBufferRead++ ];
   if(byteBufferRead == byteBufferSize) byteBufferRead = 0;
   return returner;
 }
 int decodeFrame(bool* frameIn) {
   int returner = 0;
-  for( int i = 9; i > 1; i++ ) {
+  for( int i = 8; i > 0; i-- ) {
     returner += (int)frameIn[i] * pow(2, i - 1); 
   }
   return returner;
 }
+
+
 // getData reads a single frame from the keyboard. Refuses to do anything
 //    until data comes in.
 //  @todo - write nosend() to when host would like to write to keyboard
@@ -75,12 +71,15 @@ void getData() {
   //take in whatever data we can and wait to make sure
   //   there is no more
   while(tCounter < tCounter_MAX) {
+    
     if(digitalRead(Clock) != 1) { //on clock's falling edge
       tCounter = 0; //reset if we got a bit
+      
       frame[bitCounter++] = digitalRead(Data);
       //check if we got an entire frame
-      if(bitCounter == 11) { 
-        byteBuffer[byteBufferWrite++] = decodeFrame(frame);
+      if(bitCounter == 11) {
+        byteBuffer[byteBufferWrite++] = decodeFrame( frame );
+        Serial.print(byteBuffer[byteBufferWrite - 1]);
         if(byteBufferWrite == byteBufferSize) byteBufferWrite = 0;
         bitCounter = 0;
       }
@@ -122,10 +121,8 @@ void disambiguate(bool isRelease) {
                 break;
       case 71:  if(isRelease == true) {/*should never see this*/}
                 else {
-                   if(bitBufferRead == bitBufferWrite) getData();
-                   if(bitBufferRead == bitBufferWrite) getData();
-                   integerDecode();
-                   integerDecode();
+                   getNextByte();
+                   getNextByte();
                    Keyboard.press(206);
                 }
                 break;   
@@ -179,13 +176,12 @@ void setup() {
 //loop arduino IDE compatible. Waits for key input then decodes it.
 void loop(){
   getData();
-  if( (bitBufferRead - bitBufferWrite) != 0) {
-    while( (bitBufferRead - bitBufferWrite) != 0) {
+  if( (byteBufferRead - byteBufferWrite) != 0) {
+    while( (byteBufferRead - byteBufferWrite) != 0) {
 
-      int decoded = integerDecode( ) ;
-      
+      int decoded = getNextByte();
+//      Serial.print( decoded );
       if( decoded == 14 ) { //super slow, may want to change to decoded == 28
-        if(bitBufferRead == bitBufferWrite) getData(); //nothing to decode, so we read more
         int decodedHere = getNextByte();
         Keyboard.release(lookupTable[decodedHere]);
       }
