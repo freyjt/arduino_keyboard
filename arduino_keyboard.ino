@@ -11,6 +11,7 @@
 const int  Clock                     = 10; //pin to receive kbd clock
 const int  Data                      = 16; //pin to receive kbd data
 const int  Ground_Clock              = 14; //pin to send clock to ground
+const int  Ground_Data               = 15;
 const int  FRAME_SIZE                = 11;
 
 const int  byteBufferSize            = 22;
@@ -55,6 +56,42 @@ const char lookupTable[256]          = { /*0*/     '&',   '*',   '*',   '*',   '
                                          /*240*/   '*',   '*',   '*',   '*',   '*',   '*',   '*',   '*',   
                                                    '*',   '*',   '*',   '*',   '*',   '*',   '*',   '*' };
 
+const bool echo[FRAME_SIZE] = { 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1 }; //final bit is a bit strange
+                                                                   // always One...but then the first is always zero
+//@input indicator tells the method which frame to write
+void commToBoard(char indicator) {
+  //signal to the keyboard that you have something to say;
+  digitalWrite(Ground_Clock, HIGH);
+  delayMicroseconds( 200 );
+  digitalWrite(Ground_Data,  HIGH);
+  digitalWrite(Ground_Clock, LOW );
+  Serial.print( "Entered, took the lines low and high\n" );
+
+  for(int i = 0; i < FRAME_SIZE; i++) {
+    
+    digitalWrite( Ground_Data, !echo[ i ] );
+    Serial.print( echo[i] );
+    //00111000111 //suggests I'm not writing what I think I am
+    Serial.print( digitalRead(Data) );
+    while( digitalRead(Clock) == 1) {
+      //wait for a falling edge
+    }
+    while( digitalRead(Clock) == 0) {
+      //wait again for a rising edge
+    }
+  }
+  //don't use the last bit, just put high on the edge
+  digitalWrite(Ground_Data, LOW);
+//  while(digitalRead(Clock) == 1) { }
+  if( digitalRead(Data) == 0) {
+    Serial.print("dataLine is low after run");
+  } else {
+    Serial.print("dataline is HIGH after run");
+  }
+   getData();
+//  Serial.print( getNextByte() );
+}
+
 
 int getNextByte( ) {
   if(byteBufferRead == byteBufferWrite) getData();
@@ -96,6 +133,7 @@ void getData() {
         digitalWrite(Ground_Clock, HIGH);
         byteBuffer[byteBufferWrite++] = decodeFrame( frame );
         Serial.print(byteBuffer[byteBufferWrite - 1]);
+        Serial.print("|");
         if(byteBufferWrite == byteBufferSize) byteBufferWrite = 0;
         bitCounter = 0;
         digitalWrite(Ground_Clock, LOW);
@@ -146,11 +184,12 @@ void disambiguate(bool isRelease) {
       case 77:  if(isRelease == true) Keyboard.release(   KEY_DOWN_ARROW);
                 else                  Keyboard.press(     KEY_DOWN_ARROW);
                 break;
-      case 81:  if(isRelease == true) Keyboard.release(   '\334'); //  / on num
+      case 81:  if(isRelease == true) Keyboard.release(   '\334'); //  '/' on num
                 else                  Keyboard.press(     '\334');
                 break;
       case 89:  if(isRelease == true) Keyboard.release(   '\340'); //NUM ENTER
                 else                  Keyboard.press(     '\340');
+                
                 break;
       case 93:  if(isRelease == true) Keyboard.release(   KEY_PAGE_DOWN);
                 else                  Keyboard.press(     KEY_PAGE_DOWN);
@@ -185,8 +224,10 @@ void setup() {
    pinMode(Clock, INPUT);
    pinMode(Data,  INPUT);
    pinMode(Ground_Clock, OUTPUT);
+   pinMode(Ground_Data,  OUTPUT);
+   digitalWrite(Ground_Data,  LOW);
    digitalWrite(Ground_Clock, LOW);
-   Serial.begin(9600); //Can and should be removed when a stable version is made
+   Serial.begin(9600); //Can and sho02uld be removed when a stable version is made
    Keyboard.begin();
 }
 
@@ -203,7 +244,10 @@ void loop(){
       }
       else if( lookupTable[decoded] == '*') Keyboard.releaseAll();
       else if( lookupTable[decoded] == '@') disambiguate( false );
-      else Keyboard.press( lookupTable[decoded] );
+      else {
+        Keyboard.press( lookupTable[decoded] );
+        if(decoded == 235) { commToBoard('n'); } //numlock = 235
+      }
     } 
   }
   
