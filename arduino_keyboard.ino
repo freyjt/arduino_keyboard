@@ -66,13 +66,17 @@ const int RES = 125;
 bool num    = false;
 bool scroll = false;
 bool caps   = false;
-const bool echo[FRAME_SIZE]     = { 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0 }; //final bit is a bit strange
-                                                                       // always One...but then the first is always zero
+const bool echo[FRAME_SIZE]     = { 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0 };
 const bool setLocks[FRAME_SIZE] = { 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0 }; 
 const bool zero[FRAME_SIZE]     = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 };
 
+
+//Exists to set the lock lights on the keyboard when lock buttons are pressed
+//@TODO current implementation is a bit messier than it has to be. you can clean it
+// up by passing in the frame to write to serial.
 void setLights( ) {
-  //get this out of the way now to save tive later
+  //write frame representing the locks on with odd parity
+  // do now to save tive later; should be moved when fixed (to after if)
   int lockCount = 0;
   if(num)    lockCount++;
   if(scroll) lockCount++;
@@ -89,25 +93,23 @@ void setLights( ) {
   digitalWrite(Ground_Data,  HIGH);
   delayMicroseconds(4);
   digitalWrite(Ground_Clock, LOW );
-
+  
+  //write first bit in preparation for falling edge
+  // this is the presend (not in byte but in frame bit, always 0)
   digitalWrite( Ground_Data, !eHere );
   digitalWrite( A0,           eHere );  
   
-
   for( ; i < FRAME_SIZE; i++) {
      
     while( digitalRead(Clock) == 1) { /*wait for a falling edge*/ }
     eHere = setLocks[i];
-
     digitalWrite( Ground_Data, !eHere );
     digitalWrite( A0,           eHere );
-
     while( digitalRead(Clock) == 0) { /*wait again for a rising edge*/ }
   }
-
-  
+   
   //don't use the last bit, just put high on the edge
-
+  // @TODO try restarting function if acknowledge BIT not recieved
   digitalWrite(A0, LOW);
   digitalWrite(Ground_Data, LOW);
   
@@ -116,6 +118,8 @@ void setLights( ) {
   getData();
   int deca = getNextByte();
   if( deca == ACK ) {
+     // this is the same code as above (more or less)
+     //  clean it up by changing to recall.
      deca = RES;
      while(deca == RES) {
         eHere = locks[0];
@@ -128,15 +132,12 @@ void setLights( ) {
 
         digitalWrite( Ground_Data, !eHere );
         digitalWrite( A0,           eHere );  
-  
-
-         for( ; i < FRAME_SIZE; i++) {
+        
+        for( ; i < FRAME_SIZE; i++) {
               while( digitalRead(Clock) == 1) { /*wait for a falling edge*/ }
               eHere = locks[i];
-
               digitalWrite( Ground_Data, !eHere );
               digitalWrite( A0,           eHere );
-    
               while( digitalRead(Clock) == 0) { /*wait again for a rising edge*/ }
          }
 
@@ -154,64 +155,32 @@ void setLights( ) {
     } else {
       Serial.print("ERROR: Unable to decode in set lights.");
     }
-}
+}//END setLights()
 
-//@input indicator tells the method which frame to write
-void commToBoard(const bool *sendByte ) {
-  //signal to the keyboard that you have something to say;]
-  bool eHere = sendByte[0];
-  int  i     = 1;
-  digitalWrite(Ground_Clock, HIGH);
-  delayMicroseconds(60);
-  digitalWrite(Ground_Data,  HIGH);
-  delayMicroseconds(4);
-  digitalWrite(Ground_Clock, LOW );
-
-  digitalWrite( Ground_Data, !eHere );
-  digitalWrite( A0,           eHere );  
-  
-
-  for( ; i < FRAME_SIZE; i++) {
-    while( digitalRead(Clock) == 1) { /*wait for a falling edge*/ }
-    eHere = sendByte[i];
-
-    digitalWrite( Ground_Data, !eHere );
-    digitalWrite( A0,           eHere );
-    
-
-    while( digitalRead(Clock) == 0) { /*wait again for a rising edge*/ }
-  }
-
-  
-  //don't use the last bit, just put high on the edge
-
-  digitalWrite(A0, LOW);
-  digitalWrite(Ground_Data, LOW);
-  
-
-
-  while(digitalRead(Clock) == 1) { }
-  while(digitalRead(Clock) == 0) { }
-  getData();
-  int deca = getNextByte();
-
-  if(sendByte[4]) { commToBoard(zero); }
-} //END commToBoard
-
-
+// Pulls the next byte off the byte buffer and increments
+//  the buffer read location
 int getNextByte( ) {
   if(byteBufferRead == byteBufferWrite) getData();
   int returner = byteBuffer[ byteBufferRead++ ];
   if(byteBufferRead == byteBufferSize) byteBufferRead = 0;
   return returner;
-}
+} //END getNextByte()
+
+// Decodes a single frame of input from the keyboard
+// @Return a single integer between 0 and 255 representign
+//    the byte sent.
+// @TODO this is not returning the 'correct' byte
+//   but it does return unique. There is a float/double
+//   somethign error in pow. To fix we need to decode
+//   without pow (w/o the for loop for fastest). When fixed
+//   the lookup table will have to be remapped as well.
 int decodeFrame(bool* frameIn) {
   int returner = 0;
   for( int i = 8; i > 0; i-- ) {
     returner += (int)frameIn[9 - i] * pow(2, i - 1); 
   }
   return returner;
-}
+} //END decodeFrame();
 
 // getData reads a single frame from the keyboard. Refuses to do anything
 //    until data comes in.
@@ -222,23 +191,23 @@ void getData() {
   int bitCounter = 0;
   int tCounter = 0; //reset on bit
   int tCounter_MAX = 1000;//timeout adjustmenst
-  //wait for a falling edge to measure, acceptable because we can't do anything without data
-  //  if we need to communicate from host to keyboard, we should do that immediately on a lock
-  //  being pressed.
+  //wait for a falling edge to measure, acceptable 
+  //  because we can't do anything without data
   while(digitalRead(Clock) == 1) { /*check those two booleans again*/ }
   //take in whatever data we can and wait to make sure
   //   there is no more
   while(tCounter < tCounter_MAX) {
     
     if(digitalRead(Clock) != 1) { //on clock's falling edge
-      tCounter = 0; //reset if we got a bit
-      
-      
+      tCounter = 0; //reset if we got a bit  
       frame[bitCounter++] =  digitalRead(Data);
       //check if we got an entire frame
       if(bitCounter == 11) {
         digitalWrite(Ground_Clock, HIGH);
         byteBuffer[byteBufferWrite++] = decodeFrame( frame );
+        //Uncomment for useful debugging
+        //  Serial.print(byteBuffer[byteBufferWrite - 1]);
+        //  Serial.print("|");
         if(byteBufferWrite == byteBufferSize) byteBufferWrite = 0;
         bitCounter = 0;
         digitalWrite(Ground_Clock, LOW);
