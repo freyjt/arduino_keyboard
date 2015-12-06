@@ -66,11 +66,10 @@ const int RES = 125;
 bool num    = false;
 bool scroll = false;
 bool caps   = false;
-const bool echo[FRAME_SIZE] = { 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0 }; //final bit is a bit strange
-                                                                   // always One...but then the first is always zero
-const bool setLocks[FRAME_SIZE] = { 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0 }; //final bit is a bit strange
-                                                                   // always One...but then the first is always zero
-const bool zero[FRAME_SIZE] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 };
+const bool echo[FRAME_SIZE]     = { 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0 }; //final bit is a bit strange
+                                                                       // always One...but then the first is always zero
+const bool setLocks[FRAME_SIZE] = { 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0 }; 
+const bool zero[FRAME_SIZE]     = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 };
 
 void setLights( ) {
   //get this out of the way now to save tive later
@@ -81,10 +80,10 @@ void setLights( ) {
   bool par = false;
   if( lockCount % 2 == 0) par = true;
   bool locks[FRAME_SIZE] = {0, scroll, num, caps, 0, 0, 0, 0, 0, par, 0 };
-    //signal to the keyboard that you have something to say;]
   bool eHere = setLocks[0];
   int  i     = 1;
   
+  //signal to the keyboard that you have something to say;]
   digitalWrite(Ground_Clock, HIGH);
   delayMicroseconds(60);
   digitalWrite(Ground_Data,  HIGH);
@@ -96,13 +95,12 @@ void setLights( ) {
   
 
   for( ; i < FRAME_SIZE; i++) {
-     //00111000111 //suggests I'm not writing what I think I am    
+     
     while( digitalRead(Clock) == 1) { /*wait for a falling edge*/ }
     eHere = setLocks[i];
 
     digitalWrite( Ground_Data, !eHere );
     digitalWrite( A0,           eHere );
-    
 
     while( digitalRead(Clock) == 0) { /*wait again for a rising edge*/ }
   }
@@ -113,14 +111,11 @@ void setLights( ) {
   digitalWrite(A0, LOW);
   digitalWrite(Ground_Data, LOW);
   
-  while(digitalRead(Clock) == 1) { Serial.print( "L" ); }
+  while(digitalRead(Clock) == 1) { }
   while(digitalRead(Clock) == 0) { }
   getData();
   int deca = getNextByte();
-  Serial.print(deca);
-  Serial.print("|");
   if( deca == ACK ) {
-    Serial.print("FirstIff");
      deca = RES;
      while(deca == RES) {
         eHere = locks[0];
@@ -136,22 +131,20 @@ void setLights( ) {
   
 
          for( ; i < FRAME_SIZE; i++) {
-            //00111000111 //suggests I'm not writing what I think I am    
               while( digitalRead(Clock) == 1) { /*wait for a falling edge*/ }
               eHere = locks[i];
 
               digitalWrite( Ground_Data, !eHere );
               digitalWrite( A0,           eHere );
     
-
-             while( digitalRead(Clock) == 0) { /*wait again for a rising edge*/ }
+              while( digitalRead(Clock) == 0) { /*wait again for a rising edge*/ }
          }
 
          //don't use the last bit, just put high on the edge
          digitalWrite(A0, LOW);
          digitalWrite(Ground_Data, LOW);
   
-         while(digitalRead(Clock) == 1) { Serial.print( "L" ); }
+         while(digitalRead(Clock) == 1) { }
          while(digitalRead(Clock) == 0) { }
          getData();
          deca = getNextByte(); 
@@ -159,20 +152,10 @@ void setLights( ) {
     } else if(deca == RES) {
       setLights( );
     } else {
-      Serial.print("Unable to decode in set lights.");
+      Serial.print("ERROR: Unable to decode in set lights.");
     }
 }
 
-
-void whatHappensNext() {
-  int counter = 0;
-  while(true) {
-    while(digitalRead(Clock) == 1) { Serial.print(counter++); }
-    Serial.print("\n");
-    while(digitalRead(Clock) == 0) { Serial.print(counter++); }
-  
-  }
-}
 //@input indicator tells the method which frame to write
 void commToBoard(const bool *sendByte ) {
   //signal to the keyboard that you have something to say;]
@@ -189,7 +172,6 @@ void commToBoard(const bool *sendByte ) {
   
 
   for( ; i < FRAME_SIZE; i++) {
-     //00111000111 //suggests I'm not writing what I think I am    
     while( digitalRead(Clock) == 1) { /*wait for a falling edge*/ }
     eHere = sendByte[i];
 
@@ -208,14 +190,10 @@ void commToBoard(const bool *sendByte ) {
   
 
 
-  while(digitalRead(Clock) == 1) { Serial.print( "L" ); }
+  while(digitalRead(Clock) == 1) { }
   while(digitalRead(Clock) == 0) { }
   getData();
   int deca = getNextByte();
-
-  Serial.print("\n");
-  Serial.print(deca);
-  Serial.print("\n");
 
   if(sendByte[4]) { commToBoard(zero); }
 } //END commToBoard
@@ -230,7 +208,6 @@ int getNextByte( ) {
 int decodeFrame(bool* frameIn) {
   int returner = 0;
   for( int i = 8; i > 0; i-- ) {
-    Serial.print(frameIn[9-i]);
     returner += (int)frameIn[9 - i] * pow(2, i - 1); 
   }
   return returner;
@@ -248,7 +225,6 @@ void getData() {
   //wait for a falling edge to measure, acceptable because we can't do anything without data
   //  if we need to communicate from host to keyboard, we should do that immediately on a lock
   //  being pressed.
-  Serial.print("I'm in get data waiting for clock to fall\n");
   while(digitalRead(Clock) == 1) { /*check those two booleans again*/ }
   //take in whatever data we can and wait to make sure
   //   there is no more
@@ -263,8 +239,6 @@ void getData() {
       if(bitCounter == 11) {
         digitalWrite(Ground_Clock, HIGH);
         byteBuffer[byteBufferWrite++] = decodeFrame( frame );
-        Serial.print(byteBuffer[byteBufferWrite-1]);
-        Serial.print("|");
         if(byteBufferWrite == byteBufferSize) byteBufferWrite = 0;
         bitCounter = 0;
         digitalWrite(Ground_Clock, LOW);
@@ -379,11 +353,7 @@ void loop(){
       else if( lookupTable[decoded] == '*') Keyboard.releaseAll();
       else if( lookupTable[decoded] == '@') disambiguate( false );
       else {
-        /*
-        * This block is coded for testing, make sure you remember to change
-        * it as the tests change
-         */
-        
+        // Handle lock keys first
         if(decoded == 235) {
           num = !num;
           setLights(); 
