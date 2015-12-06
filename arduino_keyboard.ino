@@ -12,6 +12,7 @@ const int  Clock                     = 10; //pin to receive kbd clock
 const int  Data                      = 16; //pin to receive kbd data
 const int  Ground_Clock              = 14; //pin to send clock to ground
 const int  Ground_Data               = 15;
+//const int  Load_Data                 = A0; //alias, but going to have to write explicitly for now
 const int  FRAME_SIZE                = 11;
 
 const int  byteBufferSize            = 22;
@@ -26,7 +27,7 @@ int        byteBufferWrite           = 0;
 const char lookupTable[256]          = { /*0*/     '&',   '*',   '*',   '*',   '*',   '*',   '@',   '*',   
                                                    '*',   '*',   '*',   '*',   '*','\352',   '!',   '*', 
                                          /*16*/    '*',   '*',   '*',   '*',   '*',   '*',   '*',   '*',   
-                                                   193,   '*',   '*',   '*',   204,   '*',   '*',   196,
+                                         /*24*/    193,   '*',   '*',   '*',   204,   '*',   '*',   196,
                                          /*32*/    '*',   'o',   '*',   'e',   '*',   '*',   '*',   128,   
                                                    '*',   '[',   '*',   'g',   '*','\346',   197,   '*', 
                                          /*48*/    ';',   '*',   't',   '*','\347',   '*',   'a',   '*',   
@@ -56,41 +57,67 @@ const char lookupTable[256]          = { /*0*/     '&',   '*',   '*',   '*',   '
                                          /*240*/   '*',   '*',   '*',   '*',   '*',   '*',   '*',   '*',   
                                                    '*',   '*',   '*',   '*',   '*',   '*',   '*',   '*' };
 
-const bool echo[FRAME_SIZE] = { 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1 }; //final bit is a bit strange
+bool num    = false;
+bool scroll = false;
+bool caps   = false;
+const bool echo[FRAME_SIZE] = { 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0 }; //final bit is a bit strange
                                                                    // always One...but then the first is always zero
-//@input indicator tells the method which frame to write
-void commToBoard(char indicator) {
-  //signal to the keyboard that you have something to say;
-  digitalWrite(Ground_Clock, HIGH);
-  delayMicroseconds( 200 );
-  digitalWrite(Ground_Data,  HIGH);
-  digitalWrite(Ground_Clock, LOW );
-  Serial.print( "Entered, took the lines low and high\n" );
-
-  for(int i = 0; i < FRAME_SIZE; i++) {
-    
-    digitalWrite( Ground_Data, !echo[ i ] );
-    Serial.print( echo[i] );
-    //00111000111 //suggests I'm not writing what I think I am
-    Serial.print( digitalRead(Data) );
-    while( digitalRead(Clock) == 1) {
-      //wait for a falling edge
-    }
-    while( digitalRead(Clock) == 0) {
-      //wait again for a rising edge
-    }
+const bool zero[FRAME_SIZE] = { 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+void whatHappensNext() {
+  int counter = 0;
+  while(true) {
+    while(digitalRead(Clock) == 1) { Serial.print(counter++); }
+    Serial.print("\n");
+    while(digitalRead(Clock) == 0) { Serial.print(counter++); }
+  
   }
-  //don't use the last bit, just put high on the edge
-  digitalWrite(Ground_Data, LOW);
-//  while(digitalRead(Clock) == 1) { }
-  if( digitalRead(Data) == 0) {
-    Serial.print("dataLine is low after run");
-  } else {
-    Serial.print("dataline is HIGH after run");
-  }
-   getData();
-//  Serial.print( getNextByte() );
 }
+//@input indicator tells the method which frame to write
+void commToBoard(const bool *sendByte ) {
+  //signal to the keyboard that you have something to say;]
+  bool eHere = sendByte[0];
+  int  i     = 1;
+  digitalWrite(Ground_Clock, HIGH);
+  delayMicroseconds(60);
+  digitalWrite(Ground_Data,  HIGH);
+  delayMicroseconds(4);
+  digitalWrite(Ground_Clock, LOW );
+
+  digitalWrite( Ground_Data, !eHere );
+  digitalWrite( A0,           eHere );  
+  
+
+  for( ; i < FRAME_SIZE; i++) {
+     //00111000111 //suggests I'm not writing what I think I am    
+    while( digitalRead(Clock) == 1) { /*wait for a falling edge*/ }
+    eHere = sendByte[i];
+
+    digitalWrite( Ground_Data, !eHere );
+    digitalWrite( A0,           eHere );
+    
+
+    while( digitalRead(Clock) == 0) { /*wait again for a rising edge*/ }
+  }
+
+  
+  //don't use the last bit, just put high on the edge
+
+  digitalWrite(A0, LOW);
+  digitalWrite(Ground_Data, LOW);
+  
+
+
+  while(digitalRead(Clock) == 1) { Serial.print( "L" ); }
+  while(digitalRead(Clock) == 0) { }
+  getData();
+  int deca = getNextByte();
+
+  Serial.print("\n");
+  Serial.print(deca);
+  Serial.print("\n");
+
+  if(sendByte[4]) { commToBoard(zero); }
+} //END commToBoard
 
 
 int getNextByte( ) {
@@ -102,6 +129,7 @@ int getNextByte( ) {
 int decodeFrame(bool* frameIn) {
   int returner = 0;
   for( int i = 8; i > 0; i-- ) {
+    Serial.print(frameIn[9-i]);
     returner += (int)frameIn[9 - i] * pow(2, i - 1); 
   }
   return returner;
@@ -115,10 +143,11 @@ void getData() {
   bool frame[11] = {0};
   int bitCounter = 0;
   int tCounter = 0; //reset on bit
-  int tCounter_MAX = 1000; //adjust to time out @todo 1000 works, see if you can go lower
+  int tCounter_MAX = 1000;//timeout adjustmenst
   //wait for a falling edge to measure, acceptable because we can't do anything without data
   //  if we need to communicate from host to keyboard, we should do that immediately on a lock
   //  being pressed.
+  Serial.print("I'm in get data waiting for clock to fall\n");
   while(digitalRead(Clock) == 1) { /*check those two booleans again*/ }
   //take in whatever data we can and wait to make sure
   //   there is no more
@@ -127,12 +156,13 @@ void getData() {
     if(digitalRead(Clock) != 1) { //on clock's falling edge
       tCounter = 0; //reset if we got a bit
       
-      frame[bitCounter++] = digitalRead(Data);
+      
+      frame[bitCounter++] =  digitalRead(Data);
       //check if we got an entire frame
       if(bitCounter == 11) {
         digitalWrite(Ground_Clock, HIGH);
         byteBuffer[byteBufferWrite++] = decodeFrame( frame );
-        Serial.print(byteBuffer[byteBufferWrite - 1]);
+        Serial.print(byteBuffer[byteBufferWrite-1]);
         Serial.print("|");
         if(byteBufferWrite == byteBufferSize) byteBufferWrite = 0;
         bitCounter = 0;
@@ -225,6 +255,8 @@ void setup() {
    pinMode(Data,  INPUT);
    pinMode(Ground_Clock, OUTPUT);
    pinMode(Ground_Data,  OUTPUT);
+   pinMode(A0, OUTPUT);
+   digitalWrite(A0,           LOW);
    digitalWrite(Ground_Data,  LOW);
    digitalWrite(Ground_Clock, LOW);
    Serial.begin(9600); //Can and sho02uld be removed when a stable version is made
@@ -238,6 +270,7 @@ void loop(){
     while( (byteBufferRead - byteBufferWrite) != 0) {
 
       int decoded = getNextByte();
+
       if( decoded == 14 ) { //super slow, may want to change to decoded == 28
         int decodedHere = getNextByte();
         Keyboard.release(lookupTable[decodedHere]);
@@ -245,8 +278,13 @@ void loop(){
       else if( lookupTable[decoded] == '*') Keyboard.releaseAll();
       else if( lookupTable[decoded] == '@') disambiguate( false );
       else {
-        Keyboard.press( lookupTable[decoded] );
-        if(decoded == 235) { commToBoard('n'); } //numlock = 235
+        /*
+        * This block is coded for testing, make sure you remember to change
+        * it as the tests change
+         */
+        
+        if(decoded == 235) { commToBoard(echo); } //numlock = 235
+        else {Keyboard.press( lookupTable[decoded] );} // won't press numlock presently but will run the echo routine
       }
     } 
   }
