@@ -25,10 +25,15 @@ KNOWN ISSUES:  Pause Break is not decoding yet, but does cause a release all seq
                pressed, so can sometimes act as a keyboard reset, without resetting the MCU.
 
                Certain keys will occasionally become unresponsive, pause break often clears
-               the issue.
+               the issue. --edit: seems to be caused by ghosting without a clear key code. weird.
                
                Full two way communication between the arduino and keyboard is not implemented.
-               As such, the lock lights will not turn on with the lock. Also, many errors are 
-               fatal and will require an MCU restart.*
+               As such, the lock lights will not turn on with the lock. 
+               Lights are now working! Other host communication is not yet implemented.
+               
+               Many errors are fatal and will require an MCU restart.*
                *After refactoring code, haven't seen this bug yet. Still in a wait-and-see
                situation.
+
+               IntegerDecoding is strictly wrong, but consistent. Will fix someday.
+
