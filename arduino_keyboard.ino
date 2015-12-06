@@ -57,12 +57,113 @@ const char lookupTable[256]          = { /*0*/     '&',   '*',   '*',   '*',   '
                                          /*240*/   '*',   '*',   '*',   '*',   '*',   '*',   '*',   '*',   
                                                    '*',   '*',   '*',   '*',   '*',   '*',   '*',   '*' };
 
+
+void getData();
+int  getNextByte();
+const int ACK = 94;
+const int RES = 125;
+
 bool num    = false;
 bool scroll = false;
 bool caps   = false;
 const bool echo[FRAME_SIZE] = { 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0 }; //final bit is a bit strange
                                                                    // always One...but then the first is always zero
-const bool zero[FRAME_SIZE] = { 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+const bool setLocks[FRAME_SIZE] = { 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0 }; //final bit is a bit strange
+                                                                   // always One...but then the first is always zero
+const bool zero[FRAME_SIZE] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 };
+
+void setLights( ) {
+  //get this out of the way now to save tive later
+  int lockCount = 0;
+  if(num)    lockCount++;
+  if(scroll) lockCount++;
+  if(caps)   lockCount++;
+  bool par = false;
+  if( lockCount % 2 == 0) par = true;
+  bool locks[FRAME_SIZE] = {0, scroll, num, caps, 0, 0, 0, 0, 0, par, 0 };
+    //signal to the keyboard that you have something to say;]
+  bool eHere = setLocks[0];
+  int  i     = 1;
+  
+  digitalWrite(Ground_Clock, HIGH);
+  delayMicroseconds(60);
+  digitalWrite(Ground_Data,  HIGH);
+  delayMicroseconds(4);
+  digitalWrite(Ground_Clock, LOW );
+
+  digitalWrite( Ground_Data, !eHere );
+  digitalWrite( A0,           eHere );  
+  
+
+  for( ; i < FRAME_SIZE; i++) {
+     //00111000111 //suggests I'm not writing what I think I am    
+    while( digitalRead(Clock) == 1) { /*wait for a falling edge*/ }
+    eHere = setLocks[i];
+
+    digitalWrite( Ground_Data, !eHere );
+    digitalWrite( A0,           eHere );
+    
+
+    while( digitalRead(Clock) == 0) { /*wait again for a rising edge*/ }
+  }
+
+  
+  //don't use the last bit, just put high on the edge
+
+  digitalWrite(A0, LOW);
+  digitalWrite(Ground_Data, LOW);
+  
+  while(digitalRead(Clock) == 1) { Serial.print( "L" ); }
+  while(digitalRead(Clock) == 0) { }
+  getData();
+  int deca = getNextByte();
+  Serial.print(deca);
+  Serial.print("|");
+  if( deca == ACK ) {
+    Serial.print("FirstIff");
+     deca = RES;
+     while(deca == RES) {
+        eHere = locks[0];
+        i     = 1;
+        digitalWrite(Ground_Clock, HIGH);
+        delayMicroseconds(60);
+        digitalWrite(Ground_Data,  HIGH);
+        delayMicroseconds(4);
+        digitalWrite(Ground_Clock, LOW );
+
+        digitalWrite( Ground_Data, !eHere );
+        digitalWrite( A0,           eHere );  
+  
+
+         for( ; i < FRAME_SIZE; i++) {
+            //00111000111 //suggests I'm not writing what I think I am    
+              while( digitalRead(Clock) == 1) { /*wait for a falling edge*/ }
+              eHere = locks[i];
+
+              digitalWrite( Ground_Data, !eHere );
+              digitalWrite( A0,           eHere );
+    
+
+             while( digitalRead(Clock) == 0) { /*wait again for a rising edge*/ }
+         }
+
+         //don't use the last bit, just put high on the edge
+         digitalWrite(A0, LOW);
+         digitalWrite(Ground_Data, LOW);
+  
+         while(digitalRead(Clock) == 1) { Serial.print( "L" ); }
+         while(digitalRead(Clock) == 0) { }
+         getData();
+         deca = getNextByte(); 
+      }
+    } else if(deca == RES) {
+      setLights( );
+    } else {
+      Serial.print("Unable to decode in set lights.");
+    }
+}
+
+
 void whatHappensNext() {
   int counter = 0;
   while(true) {
@@ -283,7 +384,24 @@ void loop(){
         * it as the tests change
          */
         
-        if(decoded == 235) { commToBoard(echo); } //numlock = 235
+        if(decoded == 235) {
+          num = !num;
+          setLights(); 
+          Keyboard.press(   lookupTable[235] );
+          Keyboard.release( lookupTable[235] );
+        } //numlock = 235
+        else if(decoded == 124) {
+          scroll = !scroll;
+          setLights();
+          Keyboard.press(   lookupTable[124] );
+          Keyboard.release( lookupTable[124] );
+        }
+        else if(decoded == 24) {
+          caps = !caps;
+          setLights();
+          Keyboard.press(   lookupTable[24]  );
+          Keyboard.release( lookupTable[24]  );
+        }
         else {Keyboard.press( lookupTable[decoded] );} // won't press numlock presently but will run the echo routine
       }
     } 
