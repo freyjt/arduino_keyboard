@@ -5,21 +5,31 @@ PURPOSE:    This project takes the input from an AT Protocol keyboad
 LISCENSE:   gnu. see LISCENSE file in project for details
 PROGRAMMER: Joshua T. Frey
 
-HOW TO USE: Key connector pinouts can be easily foud online.
+MATERIALS:  old AT-Interface keyboard (5-6 Pin DIN) but not VERY old (386's used this interface)
+            Arduino Leonardo board -- This board is natively recognized as keyboard, must be Leonardo
+            3 x 2N2222 or similar transistors
+            3 x resistors to protect the transistor base
+            1 momentary switch (if you intend to use the mcu reset...recommended)
+
+HOW TO USE: Key connector pinouts can be easily found online, I used 
+                retired.beyondLogic.org/keyboard/keybrd.htm
+            on this project quite a bit, and recommend it for further info.
             There are 4 used lines on the connector (whether 5 or 6 pin DIN)
 
             +5v - On the keyboards I've tested this can be connected directly to
                   the voltage from the arduino.
-            CLK - The keyboard generates it's on clock signal for data transfer
+            CLK - The keyboard generates it's own clock signal for data transfer
                   the pin for this connection is obvious in the code, and should
                   be checked and adjusted accordingly.
-                  We also need to wire a transistor controlled from the ground_clock
-                  (in code) pin to the clock and ground. 
-            DATA- same method as clock, without a transistor.
+            DATA- same method as clock
             GND - can be connected straight to arduino ground
 
-            Simply hook everything up and program the MCU with an Arduino IDE compatible
-            compiler, your keyboard should work.
+            Program the MCU with an Arduino IDE compatible compiler/uploader; it will
+	    need to know The leonardo Keyboard.h header, so probably the 'official' IDE
+            is easiest. The bridge-circuit diagram is available in this project.
+            It's simple, 3 2N2222 transistors, and appropriate resistor values.
+            Once wired, plugged in and uploaded the keyboard should function (apparently**)
+            normally.
 
 KNOWN ISSUES:  Pause Break is not decoding yet, but does cause a release all sequence when
                pressed, so can sometimes act as a keyboard reset, without resetting the MCU.
@@ -32,8 +42,14 @@ KNOWN ISSUES:  Pause Break is not decoding yet, but does cause a release all seq
                Lights are now working! Other host communication is not yet implemented.
                
                Many errors are fatal and will require an MCU restart.*
-               *After refactoring code, haven't seen this bug yet. Still in a wait-and-see
+               *After refactoring code, haven't seen this bug again yet. Still in a wait-and-see
                situation.
 
                IntegerDecoding is strictly wrong, but consistent. Will fix someday.
+
+               **the only real addendum to this is the lock keys will not hold down
+               they are press and release in code because of the nature of the back-
+               -and-forth comm on these keys, they could possibly not be released in
+               code. This could be annoying to anyone who wanted to hold the keys
+               down for whatever reason.
 
