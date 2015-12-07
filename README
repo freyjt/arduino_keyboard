@@ -25,11 +25,16 @@ HOW TO USE: Key connector pinouts can be easily found online, I used
             GND - can be connected straight to arduino ground
 
             Program the MCU with an Arduino IDE compatible compiler/uploader; it will
-	    need to know The leonardo Keyboard.h header, so probably the 'official' IDE
+            need to know The leonardo Keyboard.h header, so probably the 'official' IDE
             is easiest. The bridge-circuit diagram is available in this project.
             It's simple, 3 2N2222 transistors, and appropriate resistor values.
             Once wired, plugged in and uploaded the keyboard should function (apparently**)
             normally.
+
+            You may also want to use a reset switch for the mcu (and possibly the keyboard)
+            The MCU reset can be wired from the RST pin directly to the ground. The keyboard
+            reset would probably be best accomplished (I didn't use one) by wiring a momentary
+            switch to cut power to the keyboard.
 
 KNOWN ISSUES:  Pause Break is not decoding yet, but does cause a release all sequence when
                pressed, so can sometimes act as a keyboard reset, without resetting the MCU.
